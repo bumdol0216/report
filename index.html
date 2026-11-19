@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>육군 보고서 작성기</title>
+<title>육군훈련소 보고서 양식툴</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
@@ -13,7 +13,7 @@ textarea{height:300px;font-family:monospace}.row{display:flex;gap:6px}.row>*{fle
 button{padding:7px 10px;margin:3px 3px 0 0;border:0;border-radius:4px;background:#3d5a3d;color:#fff;cursor:pointer;font:inherit;font-size:13px}
 button.g{background:#777}.help{font-size:11px;color:#555;background:#f3f6f0;padding:6px;border-radius:4px;line-height:1.5}
 #wrap{flex:1;overflow:auto;padding:16px;display:flex;justify-content:center}
-#doc{width:794px;background:#fff}.page{width:794px;min-height:1123px;padding:60px 70px;position:relative;background:#fff;box-shadow:0 0 6px #0004;margin-bottom:16px;font-family:'Noto Serif KR',serif;font-size:15px;line-height:1.55;color:#000}
+#doc{width:794px;background:#fff}.pc{height:993px;overflow:hidden}.pn{position:absolute;bottom:30px;left:0;right:0;text-align:center;font-size:13px}.page{width:794px;height:1123px;overflow:hidden;padding:60px 70px 0;position:relative;background:#fff;box-shadow:0 0 6px #0004;margin-bottom:16px;font-family:'Noto Serif KR',serif;font-size:15px;line-height:1.55;color:#000}
 .cap .page{box-shadow:none;margin:0;border-bottom:1px solid #ccc}
 .cover{text-align:center}.cover img{width:340px;margin-top:140px}.cover h2{font:900 34px 'Noto Sans KR';margin:150px 0 20px;line-height:1.4;border-top:3px double #000;border-bottom:3px double #000;padding:24px 0}
 .cover .d{font-size:22px;margin-top:80px}.cover .o{font:700 24px 'Noto Sans KR';margin-top:30px}
@@ -23,14 +23,14 @@ button.g{background:#777}.help{font-size:11px;color:#555;background:#f3f6f0;padd
 .title{font:900 24px 'Noto Sans KR';text-align:center;border-bottom:3px solid #000;border-top:1px solid #000;padding:10px 0;margin:10px 0 22px}
 .h1{font:700 18px 'Noto Sans KR';margin:20px 0 8px;display:flex;align-items:center;gap:8px;border-bottom:1.5px solid #000;padding-bottom:3px}.h1 b{background:#1f3a1f;color:#fff;padding:0 9px;border-radius:2px}
 p{margin:3px 0}.l1{margin-top:9px;font-weight:700}.l2{padding-left:1em}.l3{padding-left:2.1em}.nt{padding-left:1.4em;font-size:14px}
-table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t td,.t th{border:1px solid #000;padding:4px 6px;text-align:center}.t th{background:#e8ede3}
+table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t thead th{background:#e8ede3}.t td,.t th{border:1px solid #000;padding:4px 6px;text-align:center}.t th{background:#e8ede3}
 .end{text-align:center;margin-top:30px}.by{text-align:right;margin-top:24px;font-weight:700}
 @media(max-width:900px){body{flex-direction:column}#ui{width:100%;height:auto;position:static}}
-@media print{body{display:block;background:#fff}#ui{display:none}#wrap{padding:0;display:block}.page{box-shadow:none;margin:0;page-break-after:always}@page{size:A4;margin:0}}
+@media print{body{display:block;background:#fff}#ui{display:none}#wrap{padding:0;display:block}.page{box-shadow:none;margin:0;page-break-after:always}@page{size:A4;margin:0}.page:last-child{page-break-after:auto}}
 #m{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center}#m>div{background:#fff;padding:14px;border-radius:8px}canvas{border:1px solid #000;touch-action:none;background:#fff}
 </style></head><body>
 <div id="ui">
-<h1>🪖 육군 보고서 작성기</h1>
+<h1>육군훈련소 보고서 양식툴</h1>
 <label>문서 종류</label><select id="kind"><option>보고서</option><option>계획서</option><option>제안서</option><option>검토서</option></select>
 <label>제목</label><input id="title" value="2027년 ○○ 훈련 계획">
 <div class="row"><div><label>소속</label><input id="org" value="육군훈련소"></div><div><label>작성자 계급·이름</label><input id="name" value="중위 홍길동"></div></div>
@@ -42,8 +42,8 @@ table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t td,
 <div class="row"><input id="n0" placeholder="작성자명"><input id="n1" placeholder="검토자명"><input id="n2" placeholder="결재자명"></div>
 <label>본문</label><textarea id="body"></textarea>
 <div class="help"><b>쓰는 법</b> (줄 맨 앞에 기호)<br># 대제목 → 1. 2. 자동번호<br>- 항목 → □ &nbsp;&nbsp; -- → ◦ &nbsp;&nbsp; --- → ∙ &nbsp;&nbsp; * → ※<br>| 칸1 | 칸2 | → 표 (첫 줄은 제목줄)</div>
-<button onclick="cap('copy')">📋 사진으로 복사</button><button onclick="cap('png')">🖼 PNG 저장</button><button onclick="window.print()">🖨 PDF/인쇄</button><br>
-<button class="g" onclick="save()">💾 수정용 파일 저장(.json)</button><button class="g" onclick="document.getElementById('f').click()">📂 파일 불러와 수정</button><input type="file" id="f" accept=".json" hidden>
+<button onclick="cap('copy')">사진으로 복사</button><button onclick="cap('png')">PNG 저장</button><button onclick="window.print()">PDF/인쇄</button><br><button class="g" onclick="document.getElementById('f').click()">사진 불러와 수정</button><input type="file" id="f" accept="image/*" hidden>
+<div class="help" id="st">저장한 PNG를 불러오면 내용이 그대로 복원됩니다. 사진을 이 화면에 붙여넣기(Ctrl+V)해도 됩니다. 일반 사진·캡처는 글자 인식으로 본문을 읽어옵니다(오타 가능).</div>
 </div>
 <div id="wrap"><div id="doc"></div></div>
 <div id="m"><div><b>서명</b><br><canvas id="pad" width="320" height="130"></canvas><br><button onclick="sg()">확인</button><button class="g" onclick="clr()">지우기</button><button class="g" onclick="document.getElementById('m').style.display='none'">취소</button></div></div>
@@ -55,32 +55,59 @@ const SAMPLE=`# 개요\n- 목 적 : 신병 교육훈련 효과 극대화\n-- 안
 $('body').value=SAMPLE;
 function today(){const d=new Date(),w='일월화수목금토'[d.getDay()];return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}.(${w})`}
 function fmt(v){if(!v)return today();const[y,m,d]=v.split('-').map(Number),w='일월화수목금토'[new Date(y,m-1,d).getDay()];return `${y}. ${m}. ${d}.(${w})`}
-function parse(t){let n=0,h='',tb=[];const fl=()=>{if(tb.length){h+='<table class=t>'+tb.map((r,i)=>'<tr>'+r.map(c=>`<${i?'td':'th'}>${esc(c)}</${i?'td':'th'}>`).join('')+'</tr>').join('')+'</table>';tb=[]}};
+function parse(t){const B=[];let n=0,tb=[];const fl=()=>{if(tb.length){B.push({t:tb});tb=[]}};
 for(let l of t.split('\n')){if(/^\s*\|/.test(l)){tb.push(l.trim().replace(/^\||\|$/g,'').split('|').map(s=>s.trim()));continue}fl();l=l.trimEnd();if(!l)continue;let m;
-if(m=l.match(/^#\s*(.*)/))h+=`<div class=h1><b>${++n}</b>${esc(m[1])}</div>`;
-else if(m=l.match(/^---\s*(.*)/))h+=`<p class=l3>∙ ${esc(m[1])}</p>`;
-else if(m=l.match(/^--\s*(.*)/))h+=`<p class=l2>◦ ${esc(m[1])}</p>`;
-else if(m=l.match(/^-\s*(.*)/))h+=`<p class=l1>□ ${esc(m[1])}</p>`;
-else if(m=l.match(/^\*\s*(.*)/))h+=`<p class=nt>※ ${esc(m[1])}</p>`;
-else h+=`<p>${esc(l)}</p>`}fl();return h}
-function render(){const v=i=>$(i).value,dt=v('auto')=='1'?today():fmt(v('date')),k=v('kind');
-let h='';if($('cover').checked)h+=`<div class="page cover"><img src="${LOGO}"><h2>${esc(v('title'))}<br><span style="font-size:22px;font-weight:400">(${k})</span></h2><div class=d>${dt}</div><div class=o>${esc(v('org'))}</div></div>`;
+if(m=l.match(/^#\s*(.*)/))B.push(`<div class=h1><b>${++n}</b>${esc(m[1])}</div>`);
+else if(m=l.match(/^---\s*(.*)/))B.push(`<p class=l3>∙ ${esc(m[1])}</p>`);
+else if(m=l.match(/^--\s*(.*)/))B.push(`<p class=l2>◦ ${esc(m[1])}</p>`);
+else if(m=l.match(/^-\s*(.*)/))B.push(`<p class=l1>□ ${esc(m[1])}</p>`);
+else if(m=l.match(/^\*\s*(.*)/))B.push(`<p class=nt>※ ${esc(m[1])}</p>`);
+else B.push(`<p>${esc(l)}</p>`)}fl();return B}
+const H=h=>{const d=document.createElement('div');d.innerHTML=h;return d.firstElementChild};
+function render(){const v=i=>$(i).value,dt=v('auto')=='1'?today():fmt(v('date')),k=v('kind'),D=$('doc');D.innerHTML='';
+if($('cover').checked)D.appendChild(H(`<div class="page cover"><img src="${LOGO}"><h2>${esc(v('title'))}<br><span style="font-size:22px;font-weight:400">(${k})</span></h2><div class=d>${dt}</div><div class=o>${esc(v('org'))}</div></div>`));
+let pc;const mk=()=>{const p=H('<div class=page><div class=pc></div></div>');D.appendChild(p);return pc=p.firstChild};
+const over=()=>pc.scrollHeight>pc.clientHeight+1;mk();
 const ap=[0,1,2].map(i=>`<td data-i=${i}>${sigs[i]?`<img src="${sigs[i]}">`:''}${esc(v('n'+i))}</td>`).join('');
-h+=`<div class=page><div class=top><div>${v('open')!='공개'?`<div class=stamp>${v('open')}</div><br>`:''}<table class=meta><tr><th>문서번호</th><td>${esc(v('no'))||'&nbsp;'}</td><th>보존기간</th><td>${esc(v('keep'))}</td><th>공개구분</th><td>${v('open')}</td></tr></table></div>
-<table class=ap><tr>${[0,1,2].map(i=>`<th>${esc(v('r'+i))}</th>`).join('')}</tr><tr>${ap}</tr></table></div>
-<div class=title>${esc(v('title'))}</div>${parse(v('body'))}<div class=by>${dt}<br>${esc(v('org'))} ${esc(v('name'))}</div><div class=end>// 끝 //</div></div>`;
-$('doc').innerHTML=h;localStorage.setItem('armyRpt',JSON.stringify(data()))}
+pc.appendChild(H(`<div class=top><div>${v('open')!='공개'?`<div class=stamp>${v('open')}</div><br>`:''}<table class=meta><tr><th>문서번호</th><td>${esc(v('no'))||'&nbsp;'}</td><th>보존기간</th><td>${esc(v('keep'))}</td><th>공개구분</th><td>${v('open')}</td></tr></table></div><table class=ap><tr>${[0,1,2].map(i=>`<th>${esc(v('r'+i))}</th>`).join('')}</tr><tr>${ap}</tr></table></div>`));
+pc.appendChild(H(`<div class=title>${esc(v('title'))}</div>`));
+const add=e=>{pc.appendChild(e);if(over()){pc.removeChild(e);const mv=[e],l=pc.lastElementChild;if(l&&l.classList.contains('h1')){pc.removeChild(l);mv.unshift(l)}mk();mv.forEach(x=>pc.appendChild(x))}};
+const mt=head=>{const t=H('<table class=t><thead><tr>'+head.map(c=>`<th>${esc(c)}</th>`).join('')+'</tr></thead><tbody></tbody></table>');return t};
+for(const b of parse(v('body'))){
+ if(typeof b=='string'){add(H(b));continue}
+ const[head,...rows]=b.t;let t=mt(head);pc.appendChild(t);if(over()){pc.removeChild(t);mk();pc.appendChild(t)}
+ for(const r of rows){const tr=H('<table><tr>'+r.map(c=>`<td>${esc(c)}</td>`).join('')+'</tr></table>').querySelector('tr');t.tBodies[0].appendChild(tr);
+  if(over()){t.tBodies[0].removeChild(tr);if(!t.tBodies[0].children.length)pc.removeChild(t);mk();t=mt(head);pc.appendChild(t);t.tBodies[0].appendChild(tr)}}}
+add(H(`<div><div class=by>${dt}<br>${esc(v('org'))} ${esc(v('name'))}</div><div class=end>// 끝 //</div></div>`));
+const ps=[...D.querySelectorAll('.page:not(.cover)')];ps.forEach((p,i)=>p.appendChild(H(`<div class=pn>- ${i+1} -</div>`)));
+localStorage.setItem('armyRpt',JSON.stringify(data()))}
 function data(){const o={sigs};IDS.forEach(i=>o[i]=$(i).value);o.cover=$('cover').checked;return o}
 function load(o){IDS.forEach(i=>{if(o[i]!=null)$(i).value=o[i]});$('cover').checked=o.cover!==false;sigs=o.sigs||['','',''];render()}
-function save(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data())],{type:'application/json'}));a.download=($('title').value||'문서')+'.json';a.click()}
-$('f').onchange=e=>{const r=new FileReader();r.onload=()=>load(JSON.parse(r.result));r.readAsText(e.target.files[0])};
-async function cap(mode){const el=$('doc');el.classList.add('cap');const c=await html2canvas(el,{scale:2,useCORS:true});el.classList.remove('cap');
-c.toBlob(async b=>{if(mode=='png'){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=($('title').value||'문서')+'.png';a.click()}
+const T=new Uint32Array(256).map((_,n)=>{let c=n;for(let k=0;k<8;k++)c=c&1?0xedb88320^(c>>>1):c>>>1;return c>>>0});
+const crc=u=>{let c=~0;for(const b of u)c=T[(c^b)&255]^(c>>>8);return ~c>>>0};
+function embed(u,txt){const bd=new TextEncoder().encode('ArmyRpt\0'+btoa(unescape(encodeURIComponent(txt)))),ty=[116,69,88,116],ch=new Uint8Array(12+bd.length),dv=new DataView(ch.buffer);
+dv.setUint32(0,bd.length);ch.set(ty,4);ch.set(bd,8);const cb=new Uint8Array(4+bd.length);cb.set(ty);cb.set(bd,4);dv.setUint32(8+bd.length,crc(cb));
+const o=new Uint8Array(u.length+ch.length);o.set(u.slice(0,33));o.set(ch,33);o.set(u.slice(33),33+ch.length);return o}
+function extract(u){const dv=new DataView(u.buffer);let i=8;while(i+12<=u.length){const n=dv.getUint32(i),ty=String.fromCharCode(...u.slice(i+4,i+8));
+if(ty=='tEXt'){let s='';for(let j=i+8;j<i+8+n;j++)s+=String.fromCharCode(u[j]);if(s.startsWith('ArmyRpt\0'))return JSON.parse(decodeURIComponent(escape(atob(s.slice(8)))))}i+=12+n}return null}
+async function cap(mode){const el=$('doc');el.classList.add('cap');const sc=Math.min(2,15000/el.scrollHeight),c=await html2canvas(el,{scale:sc,useCORS:true});el.classList.remove('cap');
+c.toBlob(async b=>{b=new Blob([embed(new Uint8Array(await b.arrayBuffer()),JSON.stringify(data()))],{type:'image/png'});
+if(mode=='png'){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=($('title').value||'문서')+'.png';a.click()}
 else try{await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);alert('복사 완료! 붙여넣기(Ctrl+V) 하세요.')}catch(e){alert('이 브라우저는 복사를 지원하지 않습니다. PNG 저장을 이용하세요.')}})}
+async function fromImg(file){const u=new Uint8Array(await file.arrayBuffer());let o=null;try{o=extract(u)}catch(e){}
+if(o){load(o);$('st').textContent='저장된 정보로 그대로 복원했습니다.';return}
+$('st').textContent='글자 인식 중입니다. 처음에는 언어 데이터를 받느라 1분 정도 걸릴 수 있습니다...';
+try{if(!window.Tesseract)await new Promise((r,j)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';s.onload=r;s.onerror=j;document.head.appendChild(s)});
+const{data:{text}}=await Tesseract.recognize(file,'kor+eng');
+$('body').value=text.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>l.replace(/^[□ㅁ]\s*/,'- ').replace(/^[◦○o]\s+/,'-- ').replace(/^[∙•·]\s*/,'--- ').replace(/^※\s*/,'* ').replace(/^(\d+)[.,]\s+/,'# ')).join('\n');
+render();$('st').textContent='글자 인식으로 본문을 불러왔습니다. 오타가 있을 수 있으니 확인 후 고쳐주세요.'}catch(e){$('st').textContent='글자 인식에 실패했습니다. 인터넷 연결을 확인하세요.'}}
+$('f').onchange=e=>{if(e.target.files[0])fromImg(e.target.files[0]);e.target.value=''};
+window.addEventListener('paste',e=>{const f=[...e.clipboardData.files].find(x=>x.type.startsWith('image/'));if(f){e.preventDefault();fromImg(f)}});
 const pad=$('pad'),g=pad.getContext('2d');let dr=false;g.lineWidth=2.5;g.lineCap='round';
 pad.onpointerdown=e=>{dr=true;g.beginPath();g.moveTo(e.offsetX,e.offsetY)};pad.onpointermove=e=>{if(dr){g.lineTo(e.offsetX,e.offsetY);g.stroke()}};window.onpointerup=()=>dr=false;
 function clr(){g.clearRect(0,0,320,130)}function sg(){const blank=!g.getImageData(0,0,320,130).data.some(x=>x);sigs[cur]=blank?'':pad.toDataURL();$('m').style.display='none';render()}
 $('doc').onclick=e=>{const t=e.target.closest('td[data-i]');if(t){cur=+t.dataset.i;clr();$('m').style.display='flex'}};
 document.querySelectorAll('#ui input,#ui select,#ui textarea').forEach(x=>x.oninput=render);
 const s=localStorage.getItem('armyRpt');if(s)try{load(JSON.parse(s))}catch(e){render()}else render();
+document.fonts.ready.then(render);
 </script></body></html>

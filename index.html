@@ -44,8 +44,8 @@ table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t the
 <label>표지 요약 (표지 아래 상자)</label><textarea id="sum" style="height:90px;font-family:inherit"></textarea>
 <label>본문</label><textarea id="body"></textarea>
 <div class="help"><b>쓰는 법</b> (줄 맨 앞에 기호)<br># 대제목 → 1. 2. 자동번호<br>- 항목 → □ &nbsp;&nbsp; -- → ◦ &nbsp;&nbsp; --- → ∙ &nbsp;&nbsp; * → ※<br>| 칸1 | 칸2 | → 표 (첫 줄은 제목줄)</div>
-<label>장별 사진 (한 장씩 고화질로 복사·저장)</label><div id="pl"></div><button onclick="capAll()">모든 장 PNG 저장</button><button onclick="doPrint()">PDF/인쇄</button><button class="g" style="background:#a33" onclick="resetAll(0)">초기화(예시 양식)</button><button class="g" onclick="resetAll(1)">빈 문서로 시작</button><br><button class="g" onclick="document.getElementById('f').click()">사진 불러와 수정</button><input type="file" id="f" accept="image/*" hidden>
-<div class="help" id="st">저장한 PNG를 불러오면 내용이 그대로 복원됩니다. 사진을 이 화면에 붙여넣기(Ctrl+V)해도 됩니다. 일반 사진·캡처는 글자 인식으로 본문을 읽어옵니다(오타 가능).</div>
+<label>장별 사진 (한 장씩 고화질로 복사·저장)</label><div id="pl"></div><button onclick="capAll()">모든 장 PNG 저장</button><button onclick="doPrint()">PDF/인쇄</button><button class="g" style="background:#a33" onclick="resetAll(0)">초기화(예시 양식)</button><button class="g" onclick="resetAll(1)">빈 문서로 시작</button><br><button class="g" onclick="document.getElementById('f').click()">사진·파일 불러와 수정</button><button class="g" onclick="saveFile()">수정용 파일 저장</button><input type="file" id="f" accept="image/*,.json,.txt" multiple hidden>
+<div class="help" id="st">저장한 PNG나 수정용 파일(.json)을 불러오면 내용이 그대로 복원됩니다. 여러 개를 한꺼번에 선택하거나 끌어다 놓을 수 있습니다. 일반 사진·캡처·.txt는 본문만 읽어옵니다(오타 가능).</div>
 </div>
 <div id="wrap"><div id="doc"></div></div>
 <div id="m"><div><b>서명 / 결재</b> <span style="font-size:11px">(그림과 글씨를 한 칸에 함께 넣을 수 있습니다)</span>
@@ -132,17 +132,38 @@ async function doPrint(){if(await stamp())window.print()}
 async function cap(mode,i){if(!await stamp())return;if(mode=='png'){dl(await shot(i),i);return}
 try{await navigator.clipboard.write([new ClipboardItem({'image/png':shot(i)})]);alert(LB[i]+(LB[i]=='표지'?'':'쪽')+' 복사 완료! 붙여넣기(Ctrl+V) 하세요.')}catch(e){alert('이 브라우저는 복사를 지원하지 않습니다. 저장 버튼을 이용하세요.')}}
 async function capAll(){if(!await stamp())return;for(let i=0;i<LB.length;i++){dl(await shot(i),i);await new Promise(r=>setTimeout(r,500))}}
-async function fromImg(file){const u=new Uint8Array(await file.arrayBuffer());let o=null;try{o=extract(u)}catch(e){}
-if(o){load(o,true);$('st').textContent='저장된 정보로 그대로 복원했습니다. 수정하면 최종 수정일이 자동으로 기록됩니다.';return}
-$('st').textContent='글자 인식 중입니다. 처음에는 언어 데이터를 받느라 1분 정도 걸릴 수 있습니다...';
-try{if(!window.Tesseract)await new Promise((r,j)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';s.onload=r;s.onerror=j;document.head.appendChild(s)});
-const{data:{text}}=await Tesseract.recognize(file,'kor+eng');
-$('body').value=text.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>l.replace(/^[□ㅁ]\s*/,'- ').replace(/^[◦○o]\s+/,'-- ').replace(/^[∙•·]\s*/,'--- ').replace(/^※\s*/,'* ').replace(/^(\d+)[.,]\s+/,'# ')).join('\n');
-loaded=true;render();$('st').textContent='글자 인식으로 본문을 불러왔습니다. 오타가 있을 수 있으니 확인 후 고쳐주세요.'}catch(e){$('st').textContent='글자 인식에 실패했습니다. 인터넷 연결을 확인하세요.'}}
 function resetAll(blank){if(!confirm(blank?'모든 내용을 지우고 빈 문서로 시작합니다. 계속할까요?':'작성 중인 내용과 서명이 지워지고 기본 예시 양식으로 돌아갑니다. 계속할까요?'))return;
 applyTpl(blank);clr();clrT();render();localStorage.removeItem('armyRpt');$('st').textContent=blank?'빈 문서로 초기화했습니다. 저장된 기록도 삭제했습니다.':'기본 예시 양식으로 초기화했습니다. 저장된 기록도 삭제했습니다.'}
-$('f').onchange=e=>{if(e.target.files[0])fromImg(e.target.files[0]);e.target.value=''};
-window.addEventListener('paste',e=>{const f=[...e.clipboardData.files].find(x=>x.type.startsWith('image/'));if(f){e.preventDefault();fromImg(f)}});
+const st=m=>$('st').textContent=m;
+const conv=t=>t.split('\n').map(l=>l.trim()).filter(l=>l&&(/[가-힣]/.test(l)||/[A-Za-z]{3,}/.test(l))&&!/Korea|Training|Center|(\d)\1{7,}/.test(l)&&l!=='육군훈련소').map(l=>l.replace(/^[□ㅁ]\s*/,'- ').replace(/^[◦○o]\s+/,'-- ').replace(/^[∙•·]\s*/,'--- ').replace(/^※\s*/,'* ').replace(/^(\d+)[.,]\s+/,'# ')).join('\n');
+async function prep(file){const bm=await createImageBitmap(file),sc=Math.min(3,Math.max(1,1800/bm.width)),W=Math.round(bm.width*sc),H=Math.round(bm.height*sc),c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d',{willReadFrequently:true});x.fillStyle='#fff';x.fillRect(0,0,W,H);x.drawImage(bm,0,0,W,H);
+const im=x.getImageData(0,0,W,H),d=im.data,ink=new Uint8Array(W*H);
+for(let i=0;i<W*H;i++){const r=d[i*4],g=d[i*4+1],b=d[i*4+2];ink[i]=((r+g+b)/3<120||(b>130&&b-r>60&&b-g>40))?1:0}
+const del=new Uint8Array(W*H),LH=Math.round(40*sc),LV=Math.round(60*sc);
+for(let y=0;y<H;y++){let st=-1;for(let x2=0;x2<=W;x2++){const v=x2<W&&ink[y*W+x2];if(v&&st<0)st=x2;if(!v&&st>=0){if(x2-st>=LH)for(let k=st;k<x2;k++)del[y*W+k]=1;st=-1}}}
+for(let x2=0;x2<W;x2++){let st=-1;for(let y=0;y<=H;y++){const v=y<H&&ink[y*W+x2];if(v&&st<0)st=y;if(!v&&st>=0){if(y-st>=LV)for(let k=st;k<y;k++)del[k*W+x2]=1;st=-1}}}
+for(let i=0;i<W*H;i++){const v=ink[i]&&!del[i]?0:255;d[i*4]=d[i*4+1]=d[i*4+2]=v;d[i*4+3]=255}
+x.putImageData(im,0,0);return c}
+async function fromFiles(list){
+const fs=[...list].sort((a,b)=>a.name.localeCompare(b.name,'ko',{numeric:true})),datas=[],rest=[];
+for(const f of fs){let o=null;try{if(/\.json$/i.test(f.name))o=JSON.parse(await f.text());else if(f.type.startsWith('image/'))o=extract(new Uint8Array(await f.arrayBuffer()))}catch(e){}
+ if(o&&o.body!=null)datas.push(o);else rest.push(f)}
+if(datas.length){load(datas[0],true);let m='저장된 정보로 그대로 복원했습니다. 수정하면 최종 수정일이 자동으로 기록됩니다.';
+ if(datas.some(d=>d.body!==datas[0].body||d.title!==datas[0].title))m+=' (서로 다른 문서가 섞여 있어 첫 번째 파일 기준으로 불러왔습니다.)';
+ if(rest.length)m+=` 저장 정보가 없는 파일 ${rest.length}개는 건너뛰었습니다.`;st(m);return}
+const use=rest.filter(f=>f.type.startsWith('image/')||/\.txt$/i.test(f.name)||f.type=='text/plain');
+if(!use.length){st('불러올 수 있는 파일이 없습니다. (사진 PNG/JPG, 수정용 파일 .json, 텍스트 .txt)');return}
+let wk=null;try{const txt=[];for(let i=0;i<use.length;i++){const f=use[i];
+ if(f.type.startsWith('image/')){st(`글자 인식 준비 중 (${i+1}/${use.length}) ... 처음에는 언어 데이터를 받느라 1분 정도 걸릴 수 있습니다.`);
+  if(!window.Tesseract)await new Promise((r,j)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';s.onload=r;s.onerror=j;document.head.appendChild(s)});
+  if(!wk){wk=await Tesseract.createWorker('kor+eng');await wk.setParameters({tessedit_pageseg_mode:'6',preserve_interword_spaces:'1'})}
+  st(`글자 인식 중 (${i+1}/${use.length}) ...`);txt.push((await wk.recognize(await prep(f))).data.text)}else txt.push(await f.text())}
+if(wk)await wk.terminate();
+$('body').value=conv(txt.join('\n'));loaded=true;render();st(`${use.length}개 파일의 본문을 불러왔습니다. 글자 인식은 오타가 있을 수 있으니 확인 후 고쳐주세요. 표, 서명, 로고, 표지 표는 읽지 않습니다.`)}catch(e){if(wk)try{await wk.terminate()}catch(_){}st('글자 인식에 실패했습니다. 인터넷 연결을 확인하세요.')}}
+async function saveFile(){if(!await stamp())return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data())],{type:'application/json'}));a.download=($('title').value||'문서')+'.json';a.click()}
+$('f').onchange=e=>{if(e.target.files.length)fromFiles(e.target.files);e.target.value=''};
+window.addEventListener('paste',e=>{const f=[...e.clipboardData.files].filter(x=>x.type.startsWith('image/'));if(f.length){e.preventDefault();fromFiles(f)}});
+window.addEventListener('dragover',e=>e.preventDefault());window.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length)fromFiles(e.dataTransfer.files)});
 const pad=$('pad'),g=pad.getContext('2d');let dr=false;g.lineCap='round';g.lineJoin='round';
 const pt=e=>{const r=pad.getBoundingClientRect();return[(e.clientX-r.left)*400/r.width,(e.clientY-r.top)*140/r.height]};
 pad.onpointerdown=e=>{dr=true;pad.setPointerCapture(e.pointerId);const[x,y]=pt(e);g.beginPath();g.moveTo(x,y);g.lineTo(x+.1,y);const er=$('pe').value=='1';g.globalCompositeOperation=er?'destination-out':'source-over';g.strokeStyle=$('pc').value;g.lineWidth=er?16:+$('pw').value;g.stroke()};

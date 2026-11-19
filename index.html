@@ -2,7 +2,7 @@
 <html lang="ko"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>육군훈련소 보고서 양식툴</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Noto+Serif+KR:wght@400;700&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:'Noto Sans KR',sans-serif;background:#e9ecef;display:flex;min-height:100vh}
@@ -14,7 +14,7 @@ button{padding:7px 10px;margin:3px 3px 0 0;border:0;border-radius:4px;background
 button.g{background:#777}.help{font-size:11px;color:#555;background:#f3f6f0;padding:6px;border-radius:4px;line-height:1.5}
 #wrap{flex:1;overflow:auto;padding:16px;display:flex;justify-content:center}
 #doc{width:794px;background:#fff}.pc{height:993px;overflow:hidden}.pn{position:absolute;bottom:30px;left:0;right:0;text-align:center;font-size:13px}.page{width:794px;height:1123px;overflow:hidden;padding:60px 70px 0;position:relative;background:#fff;box-shadow:0 0 6px #0004;margin-bottom:16px;font-family:'Noto Serif KR',serif;font-size:15px;line-height:1.55;color:#000}
-.cap .page{box-shadow:none;margin:0;border-bottom:1px solid #ccc}
+.cap .page{box-shadow:none;margin:0;}
 .cover{text-align:center}.cover img{width:340px;margin-top:140px}.cover h2{font:900 34px 'Noto Sans KR';margin:150px 0 20px;line-height:1.4;border-top:3px double #000;border-bottom:3px double #000;padding:24px 0}
 .cover .d{font-size:22px;margin-top:80px}.cover .o{font:700 24px 'Noto Sans KR';margin-top:30px}
 .meta{border-collapse:collapse;font-size:12px}.meta td,.ap td{border:1px solid #000;padding:2px 6px;text-align:center}.meta th,.ap th{border:1px solid #000;background:#eee;padding:2px 6px;font-weight:400}
@@ -28,6 +28,7 @@ table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t the
 @media(max-width:900px){body{flex-direction:column}#ui{width:100%;height:auto;position:static}}
 @media print{body{display:block;background:#fff}#ui{display:none}#wrap{padding:0;display:block}.page{box-shadow:none;margin:0;page-break-after:always}@page{size:A4;margin:0}.page:last-child{page-break-after:auto}}
 #m{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center}#m>div{background:#fff;padding:14px;border-radius:8px}canvas{border:1px solid #000;touch-action:none;background:#fff}
+.pr{display:flex;align-items:center;gap:4px;font-size:13px;margin-top:4px}.pr span{width:64px;font-weight:700}
 </style></head><body>
 <div id="ui">
 <h1>육군훈련소 보고서 양식툴</h1>
@@ -35,22 +36,28 @@ table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t the
 <label>제목</label><input id="title" value="2027년 ○○ 훈련 계획">
 <div class="row"><div><label>소속</label><input id="org" value="육군훈련소"></div><div><label>작성자 계급·이름</label><input id="name" value="중위 홍길동"></div></div>
 <div class="row"><div><label>작성일</label><input id="date" type="date"></div><div><label>자동 날짜</label><select id="auto"><option value="1">오늘로 자동</option><option value="0">직접 지정</option></select></div></div>
-<div class="row"><div><label>문서번호</label><input id="no" placeholder="예: 훈련-001"></div><div><label>보존기간</label><input id="keep" value="1년"></div><div><label>공개구분</label><select id="open"><option>공개</option><option>대외비</option><option>비공개</option></select></div></div>
+<div class="row"><div><label>문서번호 (자동)</label><input id="no" readonly placeholder="내보낼 때 자동"></div><div><label>보존기간</label><input id="keep" value="1년"></div><div><label>공개구분</label><select id="open"><option>공개</option><option>대외비</option><option>비공개</option></select></div></div>
 <label><input type="checkbox" id="cover" checked style="width:auto"> 표지(로고) 포함</label>
 <label>결재란 (직책 ↔ 문서의 칸을 누르면 서명)</label>
 <div class="row"><input id="r0" value="작성"><input id="r1" value="검토"><input id="r2" value="결재"></div>
 <div class="row"><input id="n0" placeholder="작성자명"><input id="n1" placeholder="검토자명"><input id="n2" placeholder="결재자명"></div>
 <label>본문</label><textarea id="body"></textarea>
 <div class="help"><b>쓰는 법</b> (줄 맨 앞에 기호)<br># 대제목 → 1. 2. 자동번호<br>- 항목 → □ &nbsp;&nbsp; -- → ◦ &nbsp;&nbsp; --- → ∙ &nbsp;&nbsp; * → ※<br>| 칸1 | 칸2 | → 표 (첫 줄은 제목줄)</div>
-<button onclick="cap('copy')">사진으로 복사</button><button onclick="cap('png')">PNG 저장</button><button onclick="window.print()">PDF/인쇄</button><br><button class="g" onclick="document.getElementById('f').click()">사진 불러와 수정</button><input type="file" id="f" accept="image/*" hidden>
+<label>장별 사진 (한 장씩 고화질로 복사·저장)</label><div id="pl"></div><button onclick="capAll()">모든 장 PNG 저장</button><button onclick="doPrint()">PDF/인쇄</button><br><button class="g" onclick="document.getElementById('f').click()">사진 불러와 수정</button><input type="file" id="f" accept="image/*" hidden>
 <div class="help" id="st">저장한 PNG를 불러오면 내용이 그대로 복원됩니다. 사진을 이 화면에 붙여넣기(Ctrl+V)해도 됩니다. 일반 사진·캡처는 글자 인식으로 본문을 읽어옵니다(오타 가능).</div>
 </div>
 <div id="wrap"><div id="doc"></div></div>
-<div id="m"><div><b>서명</b><br><canvas id="pad" width="320" height="130"></canvas><br><button onclick="sg()">확인</button><button class="g" onclick="clr()">지우기</button><button class="g" onclick="document.getElementById('m').style.display='none'">취소</button></div></div>
+<div id="m"><div><b>서명 / 결재</b><br><canvas id="pad" width="400" height="160"></canvas><br>
+<div class="row" style="margin:4px 0"><select id="pc"><option value="#000">검정</option><option value="#1a3fb0">파랑</option><option value="#c00">빨강</option></select><select id="pw"><option value="2">가는 펜</option><option value="4">보통 펜</option><option value="7">굵은 펜</option></select><select id="pe"><option value="0">펜</option><option value="1">지우개</option></select></div>
+<input id="pt" placeholder="또는 키보드로 입력 (예: 홍길동)" style="margin:4px 0"><br>
+<button onclick="sg()">그림으로 확인</button><button onclick="sgText()">입력한 글씨로 확인</button><button class="g" onclick="clr()">전체 지우기</button><button class="g" onclick="$('m').style.display='none'">취소</button></div></div>
 <script>
 const LOGO="logo.png",IDS=['kind','title','org','name','date','auto','no','keep','open','r0','r1','r2','n0','n1','n2','body'];
 const $=i=>document.getElementById(i),esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-let sigs=['','',''],cur=0;
+let sigs=['','',''],cur=0,LB=[],mod='',loaded=false;
+const API='https://abacus.jasoncameron.dev/hit/armytc-report-tool/export';
+const iso=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const effIso=()=>$('auto').value=='1'?iso():$('date').value;
 const SAMPLE=`# 개요\n- 목 적 : 신병 교육훈련 효과 극대화\n-- 안전 최우선 훈련 여건 보장\n--- 사전 안전점검 실시\n* 우천 시 실내 대체 편성\n# 세부 계획\n| 일시 | 내용 | 비고 |\n| 11.20(금) | 입소식 | 전 인원 |\n| 11.21(토) | 사격 훈련 | 안전통제 |\n# 행정사항\n- 건의사항은 작성자에게 보고\n※ 승인해 주시면 내실 있게 추진하겠습니다.`;
 $('body').value=SAMPLE;
 function today(){const d=new Date(),w='일월화수목금토'[d.getDay()];return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}.(${w})`}
@@ -65,11 +72,11 @@ else if(m=l.match(/^\*\s*(.*)/))B.push(`<p class=nt>※ ${esc(m[1])}</p>`);
 else B.push(`<p>${esc(l)}</p>`)}fl();return B}
 const H=h=>{const d=document.createElement('div');d.innerHTML=h;return d.firstElementChild};
 function render(){const v=i=>$(i).value,dt=v('auto')=='1'?today():fmt(v('date')),k=v('kind'),D=$('doc');D.innerHTML='';
-if($('cover').checked)D.appendChild(H(`<div class="page cover"><img src="${LOGO}"><h2>${esc(v('title'))}<br><span style="font-size:22px;font-weight:400">(${k})</span></h2><div class=d>${dt}</div><div class=o>${esc(v('org'))}</div></div>`));
+if($('cover').checked)D.appendChild(H(`<div class="page cover"><img src="${LOGO}"><h2>${esc(v('title'))}<br><span style="font-size:22px;font-weight:400">(${k})</span></h2><div class=d>${dt}${mod?`<div style="font-size:16px;margin-top:6px">최종 수정 ${mod}</div>`:''}</div><div class=o>${esc(v('org'))}</div></div>`));
 let pc;const mk=()=>{const p=H('<div class=page><div class=pc></div></div>');D.appendChild(p);return pc=p.firstChild};
 const over=()=>pc.scrollHeight>pc.clientHeight+1;mk();
 const ap=[0,1,2].map(i=>`<td data-i=${i}>${sigs[i]?`<img src="${sigs[i]}">`:''}${esc(v('n'+i))}</td>`).join('');
-pc.appendChild(H(`<div class=top><div>${v('open')!='공개'?`<div class=stamp>${v('open')}</div><br>`:''}<table class=meta><tr><th>문서번호</th><td>${esc(v('no'))||'&nbsp;'}</td><th>보존기간</th><td>${esc(v('keep'))}</td><th>공개구분</th><td>${v('open')}</td></tr></table></div><table class=ap><tr>${[0,1,2].map(i=>`<th>${esc(v('r'+i))}</th>`).join('')}</tr><tr>${ap}</tr></table></div>`));
+pc.appendChild(H(`<div class=top><div>${v('open')!='공개'?`<div class=stamp>${v('open')}</div><br>`:''}<table class=meta><tr><th>문서번호</th><td>${esc(v('no'))||'미부여'}</td><th>보존기간</th><td>${esc(v('keep'))}</td><th>공개구분</th><td>${v('open')}</td></tr></table></div><table class=ap><tr>${[0,1,2].map(i=>`<th>${esc(v('r'+i))}</th>`).join('')}</tr><tr>${ap}</tr></table></div>`));
 pc.appendChild(H(`<div class=title>${esc(v('title'))}</div>`));
 const add=e=>{pc.appendChild(e);if(over()){pc.removeChild(e);const mv=[e],l=pc.lastElementChild;if(l&&l.classList.contains('h1')){pc.removeChild(l);mv.unshift(l)}mk();mv.forEach(x=>pc.appendChild(x))}};
 const mt=head=>{const t=H('<table class=t><thead><tr>'+head.map(c=>`<th>${esc(c)}</th>`).join('')+'</tr></thead><tbody></tbody></table>');return t};
@@ -78,11 +85,13 @@ for(const b of parse(v('body'))){
  const[head,...rows]=b.t;let t=mt(head);pc.appendChild(t);if(over()){pc.removeChild(t);mk();pc.appendChild(t)}
  for(const r of rows){const tr=H('<table><tr>'+r.map(c=>`<td>${esc(c)}</td>`).join('')+'</tr></table>').querySelector('tr');t.tBodies[0].appendChild(tr);
   if(over()){t.tBodies[0].removeChild(tr);if(!t.tBodies[0].children.length)pc.removeChild(t);mk();t=mt(head);pc.appendChild(t);t.tBodies[0].appendChild(tr)}}}
-add(H(`<div><div class=by>${dt}<br>${esc(v('org'))} ${esc(v('name'))}</div><div class=end>// 끝 //</div></div>`));
-const ps=[...D.querySelectorAll('.page:not(.cover)')];ps.forEach((p,i)=>p.appendChild(H(`<div class=pn>- ${i+1} -</div>`)));
+add(H(`<div><div class=by>${dt}${mod?`<br><span style="font-weight:400;font-size:13px">(최종 수정 ${mod})</span>`:''}<br>${esc(v('org'))} ${esc(v('name'))}</div><div class=end>// 끝 //</div></div>`));
+const ps=[...D.querySelectorAll('.page:not(.cover)')];ps.forEach((p,i)=>p.appendChild(H(`<div class=pn>${ps.length}-${i+1}</div>`)));
+LB=[...(D.querySelector('.cover')?['표지']:[]),...ps.map((_,i)=>`${ps.length}-${i+1}`)];
+$('pl').innerHTML=LB.map((l,i)=>`<div class=pr><span>${l}${l=='표지'?'':'쪽'}</span><button onclick="cap('copy',${i})">복사</button><button onclick="cap('png',${i})">저장</button></div>`).join('');
 localStorage.setItem('armyRpt',JSON.stringify(data()))}
-function data(){const o={sigs};IDS.forEach(i=>o[i]=$(i).value);o.cover=$('cover').checked;return o}
-function load(o){IDS.forEach(i=>{if(o[i]!=null)$(i).value=o[i]});$('cover').checked=o.cover!==false;sigs=o.sigs||['','',''];render()}
+function data(){const o={sigs,mod,iso:effIso()};IDS.forEach(i=>o[i]=$(i).value);o.cover=$('cover').checked;return o}
+function load(o,ff){IDS.forEach(i=>{if(o[i]!=null)$(i).value=o[i]});$('cover').checked=o.cover!==false;sigs=o.sigs||['','',''];mod=o.mod||'';if(ff&&o.iso){$('date').value=o.iso;$('auto').value='0'}loaded=!!ff;render()}
 const T=new Uint32Array(256).map((_,n)=>{let c=n;for(let k=0;k<8;k++)c=c&1?0xedb88320^(c>>>1):c>>>1;return c>>>0});
 const crc=u=>{let c=~0;for(const b of u)c=T[(c^b)&255]^(c>>>8);return ~c>>>0};
 function embed(u,txt){const bd=new TextEncoder().encode('ArmyRpt\0'+btoa(unescape(encodeURIComponent(txt)))),ty=[116,69,88,116],ch=new Uint8Array(12+bd.length),dv=new DataView(ch.buffer);
@@ -90,24 +99,34 @@ dv.setUint32(0,bd.length);ch.set(ty,4);ch.set(bd,8);const cb=new Uint8Array(4+bd
 const o=new Uint8Array(u.length+ch.length);o.set(u.slice(0,33));o.set(ch,33);o.set(u.slice(33),33+ch.length);return o}
 function extract(u){const dv=new DataView(u.buffer);let i=8;while(i+12<=u.length){const n=dv.getUint32(i),ty=String.fromCharCode(...u.slice(i+4,i+8));
 if(ty=='tEXt'){let s='';for(let j=i+8;j<i+8+n;j++)s+=String.fromCharCode(u[j]);if(s.startsWith('ArmyRpt\0'))return JSON.parse(decodeURIComponent(escape(atob(s.slice(8)))))}i+=12+n}return null}
-async function cap(mode){const el=$('doc');el.classList.add('cap');const sc=Math.min(2,15000/el.scrollHeight),c=await html2canvas(el,{scale:sc,useCORS:true});el.classList.remove('cap');
-c.toBlob(async b=>{b=new Blob([embed(new Uint8Array(await b.arrayBuffer()),JSON.stringify(data()))],{type:'image/png'});
-if(mode=='png'){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=($('title').value||'문서')+'.png';a.click()}
-else try{await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);alert('복사 완료! 붙여넣기(Ctrl+V) 하세요.')}catch(e){alert('이 브라우저는 복사를 지원하지 않습니다. PNG 저장을 이용하세요.')}})}
+async function shot(i){const D=$('doc'),el=D.querySelectorAll('.page')[i];D.classList.add('cap');const c=await html2canvas(el,{scale:2,useCORS:true});D.classList.remove('cap');
+const b=await new Promise(r=>c.toBlob(r));return new Blob([embed(new Uint8Array(await b.arrayBuffer()),JSON.stringify(data()))],{type:'image/png'})}
+function dl(b,i){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=($('title').value||'문서')+'_'+LB[i]+'.png';a.click()}
+async function stamp(){try{const r=await fetch(API),j=await r.json();if(typeof j.value!='number')throw 0;$('no').value=String(j.value).padStart(6,'0');render();await new Promise(r=>setTimeout(r,150));return true}catch(e){alert('문서번호 서버에 연결하지 못해 내보내기를 중단했습니다. 인터넷 연결을 확인하고 다시 시도하세요.');return false}}
+async function doPrint(){if(await stamp())window.print()}
+async function cap(mode,i){if(!await stamp())return;if(mode=='png'){dl(await shot(i),i);return}
+try{await navigator.clipboard.write([new ClipboardItem({'image/png':shot(i)})]);alert(LB[i]+(LB[i]=='표지'?'':'쪽')+' 복사 완료! 붙여넣기(Ctrl+V) 하세요.')}catch(e){alert('이 브라우저는 복사를 지원하지 않습니다. 저장 버튼을 이용하세요.')}}
+async function capAll(){if(!await stamp())return;for(let i=0;i<LB.length;i++){dl(await shot(i),i);await new Promise(r=>setTimeout(r,500))}}
 async function fromImg(file){const u=new Uint8Array(await file.arrayBuffer());let o=null;try{o=extract(u)}catch(e){}
-if(o){load(o);$('st').textContent='저장된 정보로 그대로 복원했습니다.';return}
+if(o){load(o,true);$('st').textContent='저장된 정보로 그대로 복원했습니다. 수정하면 최종 수정일이 자동으로 기록됩니다.';return}
 $('st').textContent='글자 인식 중입니다. 처음에는 언어 데이터를 받느라 1분 정도 걸릴 수 있습니다...';
 try{if(!window.Tesseract)await new Promise((r,j)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js';s.onload=r;s.onerror=j;document.head.appendChild(s)});
 const{data:{text}}=await Tesseract.recognize(file,'kor+eng');
 $('body').value=text.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>l.replace(/^[□ㅁ]\s*/,'- ').replace(/^[◦○o]\s+/,'-- ').replace(/^[∙•·]\s*/,'--- ').replace(/^※\s*/,'* ').replace(/^(\d+)[.,]\s+/,'# ')).join('\n');
-render();$('st').textContent='글자 인식으로 본문을 불러왔습니다. 오타가 있을 수 있으니 확인 후 고쳐주세요.'}catch(e){$('st').textContent='글자 인식에 실패했습니다. 인터넷 연결을 확인하세요.'}}
+loaded=true;render();$('st').textContent='글자 인식으로 본문을 불러왔습니다. 오타가 있을 수 있으니 확인 후 고쳐주세요.'}catch(e){$('st').textContent='글자 인식에 실패했습니다. 인터넷 연결을 확인하세요.'}}
 $('f').onchange=e=>{if(e.target.files[0])fromImg(e.target.files[0]);e.target.value=''};
 window.addEventListener('paste',e=>{const f=[...e.clipboardData.files].find(x=>x.type.startsWith('image/'));if(f){e.preventDefault();fromImg(f)}});
-const pad=$('pad'),g=pad.getContext('2d');let dr=false;g.lineWidth=2.5;g.lineCap='round';
-pad.onpointerdown=e=>{dr=true;g.beginPath();g.moveTo(e.offsetX,e.offsetY)};pad.onpointermove=e=>{if(dr){g.lineTo(e.offsetX,e.offsetY);g.stroke()}};window.onpointerup=()=>dr=false;
-function clr(){g.clearRect(0,0,320,130)}function sg(){const blank=!g.getImageData(0,0,320,130).data.some(x=>x);sigs[cur]=blank?'':pad.toDataURL();$('m').style.display='none';render()}
+const pad=$('pad'),g=pad.getContext('2d');let dr=false;g.lineCap='round';g.lineJoin='round';
+const pt=e=>{const r=pad.getBoundingClientRect();return[(e.clientX-r.left)*400/r.width,(e.clientY-r.top)*160/r.height]};
+pad.onpointerdown=e=>{dr=true;pad.setPointerCapture(e.pointerId);const[x,y]=pt(e);g.beginPath();g.moveTo(x,y);g.lineTo(x+.1,y);const er=$('pe').value=='1';g.globalCompositeOperation=er?'destination-out':'source-over';g.strokeStyle=$('pc').value;g.lineWidth=er?16:+$('pw').value;g.stroke()};
+pad.onpointermove=e=>{if(dr){const[x,y]=pt(e);g.lineTo(x,y);g.stroke()}};window.onpointerup=()=>dr=false;
+function clr(){g.globalCompositeOperation='source-over';g.clearRect(0,0,400,160);$('pt').value=''}
+function done(d){sigs[cur]=d;if(loaded)mod=today();$('m').style.display='none';render()}
+function sg(){done(g.getImageData(0,0,400,160).data.some(x=>x)?pad.toDataURL():'')}
+async function sgText(){const t=$('pt').value.trim();if(!t){done('');return}await document.fonts.load("60px 'Nanum Pen Script'");
+const c=document.createElement('canvas');c.width=400;c.height=160;const x=c.getContext('2d');x.fillStyle=$('pc').value;let f=90;x.font=f+"px 'Nanum Pen Script',cursive";while(x.measureText(t).width>380&&f>20){f-=4;x.font=f+"px 'Nanum Pen Script',cursive"}x.textAlign='center';x.textBaseline='middle';x.fillText(t,200,85);done(c.toDataURL())}
 $('doc').onclick=e=>{const t=e.target.closest('td[data-i]');if(t){cur=+t.dataset.i;clr();$('m').style.display='flex'}};
-document.querySelectorAll('#ui input,#ui select,#ui textarea').forEach(x=>x.oninput=render);
+document.querySelectorAll('#ui input,#ui select,#ui textarea').forEach(x=>x.oninput=()=>{if(loaded)mod=today();render()});
 const s=localStorage.getItem('armyRpt');if(s)try{load(JSON.parse(s))}catch(e){render()}else render();
 document.fonts.ready.then(render);
 </script></body></html>

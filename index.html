@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>육군 보고서 작성기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:'Noto Sans KR',sans-serif;background:#e9ecef;display:flex;min-height:100vh}
+#ui{width:380px;padding:14px;background:#fff;overflow:auto;height:100vh;position:sticky;top:0}
+#ui h1{font-size:18px;margin:0 0 8px;color:#2f4a2f}label{display:block;font-size:12px;font-weight:700;margin:8px 0 2px}
+input,select,textarea{width:100%;padding:6px;border:1px solid #bbb;border-radius:4px;font:inherit;font-size:13px}
+textarea{height:300px;font-family:monospace}.row{display:flex;gap:6px}.row>*{flex:1}
+button{padding:7px 10px;margin:3px 3px 0 0;border:0;border-radius:4px;background:#3d5a3d;color:#fff;cursor:pointer;font:inherit;font-size:13px}
+button.g{background:#777}.help{font-size:11px;color:#555;background:#f3f6f0;padding:6px;border-radius:4px;line-height:1.5}
+#wrap{flex:1;overflow:auto;padding:16px;display:flex;justify-content:center}
+#doc{width:794px;background:#fff}.page{width:794px;min-height:1123px;padding:60px 70px;position:relative;background:#fff;box-shadow:0 0 6px #0004;margin-bottom:16px;font-family:'Noto Serif KR',serif;font-size:15px;line-height:1.55;color:#000}
+.cap .page{box-shadow:none;margin:0;border-bottom:1px solid #ccc}
+.cover{text-align:center}.cover img{width:340px;margin-top:140px}.cover h2{font:900 34px 'Noto Sans KR';margin:150px 0 20px;line-height:1.4;border-top:3px double #000;border-bottom:3px double #000;padding:24px 0}
+.cover .d{font-size:22px;margin-top:80px}.cover .o{font:700 24px 'Noto Sans KR';margin-top:30px}
+.meta{border-collapse:collapse;font-size:12px}.meta td,.ap td{border:1px solid #000;padding:2px 6px;text-align:center}.meta th,.ap th{border:1px solid #000;background:#eee;padding:2px 6px;font-weight:400}
+.top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}.ap{border-collapse:collapse;font-size:12px}.ap td{width:76px;height:60px;cursor:pointer;vertical-align:bottom;padding:1px;font-size:11px}.ap img{max-width:70px;max-height:40px;display:block;margin:auto}
+.stamp{color:#c00;border:3px solid #c00;font:900 20px 'Noto Sans KR';padding:2px 14px;display:inline-block;margin-bottom:6px}
+.title{font:900 24px 'Noto Sans KR';text-align:center;border-bottom:3px solid #000;border-top:1px solid #000;padding:10px 0;margin:10px 0 22px}
+.h1{font:700 18px 'Noto Sans KR';margin:20px 0 8px;display:flex;align-items:center;gap:8px;border-bottom:1.5px solid #000;padding-bottom:3px}.h1 b{background:#1f3a1f;color:#fff;padding:0 9px;border-radius:2px}
+p{margin:3px 0}.l1{margin-top:9px;font-weight:700}.l2{padding-left:1em}.l3{padding-left:2.1em}.nt{padding-left:1.4em;font-size:14px}
+table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t td,.t th{border:1px solid #000;padding:4px 6px;text-align:center}.t th{background:#e8ede3}
+.end{text-align:center;margin-top:30px}.by{text-align:right;margin-top:24px;font-weight:700}
+@media(max-width:900px){body{flex-direction:column}#ui{width:100%;height:auto;position:static}}
+@media print{body{display:block;background:#fff}#ui{display:none}#wrap{padding:0;display:block}.page{box-shadow:none;margin:0;page-break-after:always}@page{size:A4;margin:0}}
+#m{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center}#m>div{background:#fff;padding:14px;border-radius:8px}canvas{border:1px solid #000;touch-action:none;background:#fff}
+</style></head><body>
+<div id="ui">
+<h1>🪖 육군 보고서 작성기</h1>
+<label>문서 종류</label><select id="kind"><option>보고서</option><option>계획서</option><option>제안서</option><option>검토서</option></select>
+<label>제목</label><input id="title" value="2027년 ○○ 훈련 계획">
+<div class="row"><div><label>소속</label><input id="org" value="육군훈련소"></div><div><label>작성자 계급·이름</label><input id="name" value="중위 홍길동"></div></div>
+<div class="row"><div><label>작성일</label><input id="date" type="date"></div><div><label>자동 날짜</label><select id="auto"><option value="1">오늘로 자동</option><option value="0">직접 지정</option></select></div></div>
+<div class="row"><div><label>문서번호</label><input id="no" placeholder="예: 훈련-001"></div><div><label>보존기간</label><input id="keep" value="1년"></div><div><label>공개구분</label><select id="open"><option>공개</option><option>대외비</option><option>비공개</option></select></div></div>
+<label><input type="checkbox" id="cover" checked style="width:auto"> 표지(로고) 포함</label>
+<label>결재란 (직책 ↔ 문서의 칸을 누르면 서명)</label>
+<div class="row"><input id="r0" value="작성"><input id="r1" value="검토"><input id="r2" value="결재"></div>
+<div class="row"><input id="n0" placeholder="작성자명"><input id="n1" placeholder="검토자명"><input id="n2" placeholder="결재자명"></div>
+<label>본문</label><textarea id="body"></textarea>
+<div class="help"><b>쓰는 법</b> (줄 맨 앞에 기호)<br># 대제목 → 1. 2. 자동번호<br>- 항목 → □ &nbsp;&nbsp; -- → ◦ &nbsp;&nbsp; --- → ∙ &nbsp;&nbsp; * → ※<br>| 칸1 | 칸2 | → 표 (첫 줄은 제목줄)</div>
+<button onclick="cap('copy')">📋 사진으로 복사</button><button onclick="cap('png')">🖼 PNG 저장</button><button onclick="window.print()">🖨 PDF/인쇄</button><br>
+<button class="g" onclick="save()">💾 수정용 파일 저장(.json)</button><button class="g" onclick="document.getElementById('f').click()">📂 파일 불러와 수정</button><input type="file" id="f" accept=".json" hidden>
+</div>
+<div id="wrap"><div id="doc"></div></div>
+<div id="m"><div><b>서명</b><br><canvas id="pad" width="320" height="130"></canvas><br><button onclick="sg()">확인</button><button class="g" onclick="clr()">지우기</button><button class="g" onclick="document.getElementById('m').style.display='none'">취소</button></div></div>
+<script>
+const LOGO="logo.png",IDS=['kind','title','org','name','date','auto','no','keep','open','r0','r1','r2','n0','n1','n2','body'];
+const $=i=>document.getElementById(i),esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+let sigs=['','',''],cur=0;
+const SAMPLE=`# 개요\n- 목 적 : 신병 교육훈련 효과 극대화\n-- 안전 최우선 훈련 여건 보장\n--- 사전 안전점검 실시\n* 우천 시 실내 대체 편성\n# 세부 계획\n| 일시 | 내용 | 비고 |\n| 11.20(금) | 입소식 | 전 인원 |\n| 11.21(토) | 사격 훈련 | 안전통제 |\n# 행정사항\n- 건의사항은 작성자에게 보고\n※ 승인해 주시면 내실 있게 추진하겠습니다.`;
+$('body').value=SAMPLE;
+function today(){const d=new Date(),w='일월화수목금토'[d.getDay()];return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}.(${w})`}
+function fmt(v){if(!v)return today();const[y,m,d]=v.split('-').map(Number),w='일월화수목금토'[new Date(y,m-1,d).getDay()];return `${y}. ${m}. ${d}.(${w})`}
+function parse(t){let n=0,h='',tb=[];const fl=()=>{if(tb.length){h+='<table class=t>'+tb.map((r,i)=>'<tr>'+r.map(c=>`<${i?'td':'th'}>${esc(c)}</${i?'td':'th'}>`).join('')+'</tr>').join('')+'</table>';tb=[]}};
+for(let l of t.split('\n')){if(/^\s*\|/.test(l)){tb.push(l.trim().replace(/^\||\|$/g,'').split('|').map(s=>s.trim()));continue}fl();l=l.trimEnd();if(!l)continue;let m;
+if(m=l.match(/^#\s*(.*)/))h+=`<div class=h1><b>${++n}</b>${esc(m[1])}</div>`;
+else if(m=l.match(/^---\s*(.*)/))h+=`<p class=l3>∙ ${esc(m[1])}</p>`;
+else if(m=l.match(/^--\s*(.*)/))h+=`<p class=l2>◦ ${esc(m[1])}</p>`;
+else if(m=l.match(/^-\s*(.*)/))h+=`<p class=l1>□ ${esc(m[1])}</p>`;
+else if(m=l.match(/^\*\s*(.*)/))h+=`<p class=nt>※ ${esc(m[1])}</p>`;
+else h+=`<p>${esc(l)}</p>`}fl();return h}
+function render(){const v=i=>$(i).value,dt=v('auto')=='1'?today():fmt(v('date')),k=v('kind');
+let h='';if($('cover').checked)h+=`<div class="page cover"><img src="${LOGO}"><h2>${esc(v('title'))}<br><span style="font-size:22px;font-weight:400">(${k})</span></h2><div class=d>${dt}</div><div class=o>${esc(v('org'))}</div></div>`;
+const ap=[0,1,2].map(i=>`<td data-i=${i}>${sigs[i]?`<img src="${sigs[i]}">`:''}${esc(v('n'+i))}</td>`).join('');
+h+=`<div class=page><div class=top><div>${v('open')!='공개'?`<div class=stamp>${v('open')}</div><br>`:''}<table class=meta><tr><th>문서번호</th><td>${esc(v('no'))||'&nbsp;'}</td><th>보존기간</th><td>${esc(v('keep'))}</td><th>공개구분</th><td>${v('open')}</td></tr></table></div>
+<table class=ap><tr>${[0,1,2].map(i=>`<th>${esc(v('r'+i))}</th>`).join('')}</tr><tr>${ap}</tr></table></div>
+<div class=title>${esc(v('title'))}</div>${parse(v('body'))}<div class=by>${dt}<br>${esc(v('org'))} ${esc(v('name'))}</div><div class=end>// 끝 //</div></div>`;
+$('doc').innerHTML=h;localStorage.setItem('armyRpt',JSON.stringify(data()))}
+function data(){const o={sigs};IDS.forEach(i=>o[i]=$(i).value);o.cover=$('cover').checked;return o}
+function load(o){IDS.forEach(i=>{if(o[i]!=null)$(i).value=o[i]});$('cover').checked=o.cover!==false;sigs=o.sigs||['','',''];render()}
+function save(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data())],{type:'application/json'}));a.download=($('title').value||'문서')+'.json';a.click()}
+$('f').onchange=e=>{const r=new FileReader();r.onload=()=>load(JSON.parse(r.result));r.readAsText(e.target.files[0])};
+async function cap(mode){const el=$('doc');el.classList.add('cap');const c=await html2canvas(el,{scale:2,useCORS:true});el.classList.remove('cap');
+c.toBlob(async b=>{if(mode=='png'){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=($('title').value||'문서')+'.png';a.click()}
+else try{await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);alert('복사 완료! 붙여넣기(Ctrl+V) 하세요.')}catch(e){alert('이 브라우저는 복사를 지원하지 않습니다. PNG 저장을 이용하세요.')}})}
+const pad=$('pad'),g=pad.getContext('2d');let dr=false;g.lineWidth=2.5;g.lineCap='round';
+pad.onpointerdown=e=>{dr=true;g.beginPath();g.moveTo(e.offsetX,e.offsetY)};pad.onpointermove=e=>{if(dr){g.lineTo(e.offsetX,e.offsetY);g.stroke()}};window.onpointerup=()=>dr=false;
+function clr(){g.clearRect(0,0,320,130)}function sg(){const blank=!g.getImageData(0,0,320,130).data.some(x=>x);sigs[cur]=blank?'':pad.toDataURL();$('m').style.display='none';render()}
+$('doc').onclick=e=>{const t=e.target.closest('td[data-i]');if(t){cur=+t.dataset.i;clr();$('m').style.display='flex'}};
+document.querySelectorAll('#ui input,#ui select,#ui textarea').forEach(x=>x.oninput=render);
+const s=localStorage.getItem('armyRpt');if(s)try{load(JSON.parse(s))}catch(e){render()}else render();
+</script></body></html>

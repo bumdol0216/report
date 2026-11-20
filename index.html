@@ -44,7 +44,7 @@ table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t the
 <label>표지 요약 (표지 아래 상자)</label><textarea id="sum" style="height:90px;font-family:inherit"></textarea>
 <label>본문</label><textarea id="body"></textarea>
 <div class="help"><b>쓰는 법</b> (줄 맨 앞에 기호)<br># 대제목 → 1. 2. 자동번호<br>- 항목 → □ &nbsp;&nbsp; -- → ◦ &nbsp;&nbsp; --- → ∙ &nbsp;&nbsp; * → ※<br>| 칸1 | 칸2 | → 표 (첫 줄은 제목줄)</div>
-<label>장별 사진 (한 장씩 고화질로 복사·저장)</label><div id="pl"></div><button onclick="capAll()">모든 장 PNG 저장</button><button onclick="doPrint()">PDF/인쇄</button><button class="g" style="background:#a33" onclick="resetAll(0)">초기화(예시 양식)</button><button class="g" onclick="resetAll(1)">빈 문서로 시작</button><br><button class="g" onclick="document.getElementById('f').click()">사진·파일 불러와 수정</button><button class="g" onclick="saveFile()">수정용 파일 저장</button><input type="file" id="f" accept="image/*,.json,.txt" multiple hidden>
+<label>장별 사진 (한 장씩 고화질로 복사·저장)</label><div id="pl"></div><button onclick="capAll()">모든 장 PNG 저장</button><button onclick="doPrint()">PDF/인쇄</button><button class="g" style="background:#a33" onclick="resetAll(0)">초기화(예시 양식)</button><button class="g" onclick="resetAll(1)">빈 문서로 시작</button><br><button class="g" onclick="document.getElementById('f').click()">사진·파일 불러와 수정</button><button class="g" onclick="saveFile()">수정용 파일 저장</button><button onclick="saveHwp()">한글에서 편집 (.docx)</button><input type="file" id="f" accept="image/*,.json,.txt" multiple hidden>
 <div class="help" id="st">저장한 PNG나 수정용 파일(.json)을 불러오면 내용이 그대로 복원됩니다. 여러 개를 한꺼번에 선택하거나 끌어다 놓을 수 있습니다. 일반 사진·캡처·.txt는 본문만 읽어옵니다(오타 가능).</div>
 </div>
 <div id="wrap"><div id="doc"></div></div>
@@ -160,6 +160,65 @@ let wk=null;try{const txt=[];for(let i=0;i<use.length;i++){const f=use[i];
   st(`글자 인식 중 (${i+1}/${use.length}) ...`);txt.push((await wk.recognize(await prep(f))).data.text)}else txt.push(await f.text())}
 if(wk)await wk.terminate();
 $('body').value=conv(txt.join('\n'));loaded=true;render();st(`${use.length}개 파일의 본문을 불러왔습니다. 글자 인식은 오타가 있을 수 있으니 확인 후 고쳐주세요. 표, 서명, 로고, 표지 표는 읽지 않습니다.`)}catch(e){if(wk)try{await wk.terminate()}catch(_){}st('글자 인식에 실패했습니다. 인터넷 연결을 확인하세요.')}}
+
+const X=t=>String(t).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const bd=(c,z)=>`w:val="single" w:sz="${z||4}" w:space="0" w:color="${c||'000000'}"`;
+const NS='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"';
+function R(t,o={}){const a=o.f||'Times New Roman',e=o.f||'휴먼명조',z=o.z||23;return `<w:r><w:rPr><w:rFonts w:ascii="${a}" w:hAnsi="${a}" w:eastAsia="${e}"/>${o.b?'<w:b/>':''}${o.c?`<w:color w:val="${o.c}"/>`:''}${o.sp?`<w:spacing w:val="${o.sp}"/>`:''}<w:sz w:val="${z}"/><w:szCs w:val="${z}"/>${o.box?`<w:bdr ${bd('0000FF',12)}/>`:''}</w:rPr><w:t xml:space="preserve">${X(t)}</w:t></w:r>`}
+function P(r,o={}){return `<w:p><w:pPr>${o.kn?'<w:keepNext/>':''}${o.bd?`<w:pBdr>${o.bd}</w:pBdr>`:''}<w:spacing w:before="${o.b4||0}" w:after="${o.af==null?40:o.af}" w:line="${o.ln||340}" w:lineRule="auto"/>${o.l!=null?`<w:ind w:left="${o.l}" w:hanging="${o.h||0}"/>`:''}${o.j?`<w:jc w:val="${o.j}"/>`:''}</w:pPr>${r||''}</w:p>`}
+const TC=(w,c,o={})=>`<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${o.shd?`<w:shd w:val="clear" w:color="auto" w:fill="${o.shd}"/>`:''}<w:vAlign w:val="${o.va||'center'}"/></w:tcPr>${c||'<w:p/>'}</w:tc>`;
+const TB=(ws,rows,o={})=>`<w:tbl><w:tblPr><w:tblW w:w="${ws.reduce((a,b)=>a+b,0)}" w:type="dxa"/>${o.j?`<w:jc w:val="${o.j}"/>`:''}<w:tblBorders>${['top','left','bottom','right','insideH','insideV'].map(k=>`<w:${k} ${o.nb?'w:val="nil"':bd()}/>`).join('')}</w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="80" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${ws.map(w=>`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${rows.map(r=>`<w:tr><w:trPr>${r.h?`<w:trHeight w:val="${r.h}" w:hRule="atLeast"/>`:''}${r.hd?'<w:tblHeader/>':''}</w:trPr>${r.c.map((c,i)=>TC(ws[i],c.p,c)).join('')}</w:tr>`).join('')}</w:tbl>`;
+const IMG=(rid,cx,cy,id)=>`<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${id}" name="img${id}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${id}" name="img${id}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
+const FLD=(ins,c)=>`<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> ${ins} </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>${c}</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>`;
+function parseD(t){const B=[];let n=0,tb=[];const fl=()=>{if(tb.length){B.push({k:'tb',rows:tb});tb=[]}};
+for(let l of t.split('\n')){if(/^\s*\|/.test(l)){tb.push(l.trim().replace(/^\||\|$/g,'').split('|').map(s=>s.trim()));continue}fl();l=l.trimEnd();if(!l)continue;let m;
+if(m=l.match(/^#\s*(.*)/))B.push({k:'h1',n:++n,t:m[1]});else if(m=l.match(/^---\s*(.*)/))B.push({k:'l3',t:m[1]});else if(m=l.match(/^--\s*(.*)/))B.push({k:'l2',t:m[1]});else if(m=l.match(/^-\s*(.*)/))B.push({k:'l1',t:m[1]});else if(m=l.match(/^\*\s*(.*)/))B.push({k:'nt',t:m[1]});else B.push({k:'p',t:l})}fl();return B}
+function zip(files){const en=new TextEncoder(),parts=[],cd=[];let off=0;
+for(const f of files){const nm=en.encode(f.n),c=crc(f.d),h=new Uint8Array(30+nm.length),v=new DataView(h.buffer);
+v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint16(6,0x0800,true);v.setUint16(12,0x21,true);v.setUint32(14,c,true);v.setUint32(18,f.d.length,true);v.setUint32(22,f.d.length,true);v.setUint16(26,nm.length,true);h.set(nm,30);parts.push(h,f.d);
+const e=new Uint8Array(46+nm.length),w=new DataView(e.buffer);w.setUint32(0,0x02014b50,true);w.setUint16(4,20,true);w.setUint16(6,20,true);w.setUint16(8,0x0800,true);w.setUint16(14,0x21,true);w.setUint32(16,c,true);w.setUint32(20,f.d.length,true);w.setUint32(24,f.d.length,true);w.setUint16(28,nm.length,true);w.setUint32(42,off,true);e.set(nm,46);cd.push(e);off+=h.length+f.d.length}
+const cs=cd.reduce((a,b)=>a+b.length,0),end=new Uint8Array(22),z=new DataView(end.buffer);z.setUint32(0,0x06054b50,true);z.setUint16(8,files.length,true);z.setUint16(10,files.length,true);z.setUint32(12,cs,true);z.setUint32(16,off,true);
+return new Blob([...parts,...cd,end],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'})}
+async function makeDocx(){
+const v=i=>$(i).value,dt=v('auto')=='1'?today():fmt(v('date')),cv=$('cover').checked,k=v('kind'),HF='맑은 고딕',en=new TextEncoder();
+const tot=Math.max(1,document.querySelectorAll('.page:not(.cover)').length);
+let logo=null;try{const r=await fetch(LOGO);if(r.ok)logo=new Uint8Array(await r.arrayBuffer())}catch(e){}
+let lw=1,lh=1;if(logo){const m=await createImageBitmap(new Blob([logo]));lw=m.width;lh=m.height}
+const files=[],dr=[['rId1','header','header1.xml'],['rId2','footer','footer1.xml'],['rId3','styles','styles.xml']],sig=[];
+if(logo){files.push({n:'word/media/logo.png',d:logo});dr.push(['rIdL','image','media/logo.png'])}
+for(let i=0;i<3;i++)if(sigs[i]){files.push({n:`word/media/sig${i}.png`,d:Uint8Array.from(atob(sigs[i].split(',')[1]),c=>c.charCodeAt(0))});dr.push([`rIdS${i}`,'image',`media/sig${i}.png`]);sig[i]=1}
+const op=v('open')!='공개';
+const meta=TB([1500,2300],[['문서번호',v('no')||'미부여'],['보존기간',v('keep')],['작성일',dt],['최종수정일',mod||'-'],['공개구분',v('open')]].map(([a,b],i)=>({h:380,c:[{p:P(R(a,{z:19}),{j:'center',af:0}),shd:'EEEEEE'},{p:P(R(b,{z:19,c:i==4&&op?'CC0000':null,b:i==4&&op}),{j:'center',af:0})}]})));
+const ap=TB([1500,1500,1500],[{c:[0,1,2].map(i=>({p:P(R(v('r'+i),{z:19}),{j:'center',af:0}),shd:'EEEEEE'}))},{h:1300,c:[0,1,2].map(i=>({va:'bottom',p:(sig[i]?P(IMG(`rIdS${i}`,700000,350000,20+i),{j:'center',af:0}):'')+P(R(v('n'+i),{z:18}),{j:'center',af:0})}))}],{j:'right'});
+const layout=TB([5300,4506],[{c:[{p:meta+'<w:p/>',va:'top'},{p:ap+'<w:p/>',va:'top'}]}],{nb:1});
+const TB2='<w:top w:val="single" w:sz="36" w:space="14" w:color="0000FF"/><w:bottom w:val="single" w:sz="36" w:space="14" w:color="0000FF"/>';
+const PG='<w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="900" w:right="1050" w:bottom="1000" w:left="1050" w:header="400" w:footer="500" w:gutter="0"/>';
+let cover='';
+if(cv)cover=(logo?P(IMG('rIdL',2381250,Math.round(2381250*lh/lw),1),{j:'center',af:300}):'')+layout+P('',{b4:2200,af:0})+P(R(v('title'),{f:HF,b:1,z:54,sp:60}),{j:'center',bd:TB2,af:0,ln:400})+P(R('('+k+')',{f:HF,z:33}),{j:'center',bd:TB2,af:0})+P('',{b4:2200,af:0})+TB([7800],[{c:[{p:v('sum').split('\n').map(l=>P(R(l,{z:21}),{af:20})).join('')||P(''),va:'top'}]}],{j:'center'})+`<w:p><w:pPr><w:sectPr>${PG}</w:sectPr></w:pPr></w:p>`;
+const body=[];if(!cv)body.push(layout,P(R(v('title'),{f:HF,b:1,z:48,sp:40}),{j:'center',bd:TB2,b4:500,af:300,ln:400}));
+const W=9806;
+for(const b of parseD(v('body'))){
+if(b.k=='h1')body.push(P(R(String(b.n),{f:HF,b:1,c:'0000FF',z:24,box:1})+R(' '+b.t,{f:HF,b:1,c:'0000FF',z:28}),{kn:1,b4:300,af:100}));
+else if(b.k=='l1')body.push(P(R('□ '+b.t,{b:1}),{l:230,h:230,b4:140}));
+else if(b.k=='l2')body.push(P(R('◦ '+b.t),{l:460,h:230}));
+else if(b.k=='l3')body.push(P(R('∙ '+b.t),{l:700,h:230}));
+else if(b.k=='nt')body.push(P(R('※ '+b.t,{z:21}),{l:560,h:300}));
+else if(b.k=='p')body.push(P(R(b.t)));
+else{const n=Math.max(...b.rows.map(r=>r.length)),ws=Array(n).fill(Math.floor(W/n));body.push(TB(ws,b.rows.map((r,ri)=>({hd:ri==0,c:Array.from({length:n},(_,i)=>({p:P(R(r[i]||'',{z:22,b:ri==0}),{j:'center',af:0}),shd:ri==0?'E6ECFF':null}))})))+P('',{af:0}))}}
+body.push(P(R(dt,{b:1}),{j:'right',b4:500,af:0}));if(mod)body.push(P(R('(최종 수정 '+mod+')',{z:20}),{j:'right',af:0}));
+body.push(P(R(v('org')+' '+v('name'),{b:1}),{j:'right',af:0}),P(R('// 끝 //'),{j:'center',b4:500}));
+const sect=`<w:sectPr><w:headerReference w:type="default" r:id="rId1"/><w:footerReference w:type="default" r:id="rId2"/><w:type w:val="nextPage"/>${PG}<w:pgNumType w:start="1"/></w:sectPr>`;
+const X0='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',RT='http://schemas.openxmlformats.org/officeDocument/2006/relationships/',PK='http://schemas.openxmlformats.org/package/2006/relationships';
+const hcy=323850,hdr=`${X0}<w:hdr ${NS}>${logo?P(IMG('rIdH',Math.round(hcy*lw/lh),hcy,2),{j:'right',af:0}):P('')}</w:hdr>`;
+const ftr=`${X0}<w:ftr ${NS}>${P(FLD(cv?'SECTIONPAGES':'NUMPAGES',tot)+'<w:r><w:t>-</w:t></w:r>'+FLD('PAGE',1),{j:'center',af:0})}</w:ftr>`;
+const sty=`${X0}<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:eastAsia="휴먼명조"/><w:sz w:val="23"/><w:szCs w:val="23"/><w:lang w:val="en-US" w:eastAsia="ko-KR"/></w:rPr></w:rPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>`;
+const ct=`${X0}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>`;
+const rl=a=>`${X0}<Relationships xmlns="${PK}">${a.map(([i,t,g])=>`<Relationship Id="${i}" Type="${RT}${t}" Target="${g}"/>`).join('')}</Relationships>`;
+const doc=`${X0}<w:document ${NS}><w:body>${cover}${body.join('')}${sect}</w:body></w:document>`;
+const all=[{n:'[Content_Types].xml',d:en.encode(ct)},{n:'_rels/.rels',d:en.encode(rl([['rId1','officeDocument','word/document.xml']]))},{n:'word/document.xml',d:en.encode(doc)},{n:'word/_rels/document.xml.rels',d:en.encode(rl(dr))},{n:'word/header1.xml',d:en.encode(hdr)},{n:'word/_rels/header1.xml.rels',d:en.encode(rl(logo?[['rIdH','image','media/logo.png']]:[]))},{n:'word/footer1.xml',d:en.encode(ftr)},{n:'word/styles.xml',d:en.encode(sty)},...files];
+return{blob:zip(all),logo:!!logo}}
+async function saveHwp(){if(!await stamp())return;const r=await makeDocx(),a=document.createElement('a');a.href=URL.createObjectURL(r.blob);a.download=($('title').value||'문서')+'.docx';a.click();
+st('한글 편집용 파일(.docx)을 저장했습니다. 한글에서 [파일 > 불러오기]로 열고, 필요하면 .hwp로 다시 저장하세요.'+(r.logo?'':' (로고 파일을 찾지 못해 로고는 빠졌습니다. GitHub 사이트 주소에서 사용하세요.)'))}
 async function saveFile(){if(!await stamp())return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data())],{type:'application/json'}));a.download=($('title').value||'문서')+'.json';a.click()}
 $('f').onchange=e=>{if(e.target.files.length)fromFiles(e.target.files);e.target.value=''};
 window.addEventListener('paste',e=>{const f=[...e.clipboardData.files].filter(x=>x.type.startsWith('image/'));if(f.length){e.preventDefault();fromFiles(f)}});

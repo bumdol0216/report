@@ -29,6 +29,7 @@ table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t the
 #m{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center}#m>div{background:#fff;padding:14px;border-radius:8px}canvas{border:1px solid #000;touch-action:none;background:#fff}
 .pr{display:flex;align-items:center;gap:4px;font-size:13px;margin-top:4px}.pr span{width:64px;font-weight:700}
 #pw0{position:relative;width:400px;max-width:100%;aspect-ratio:400/160;border:1px solid #000;background:#fff}#pw0 canvas{position:absolute;left:0;width:100%;border:0;background:transparent}#pad{top:0;height:100%}#tx{top:70%;height:30%;pointer-events:none}#dv{position:absolute;left:0;right:0;top:70%;border-top:2px dashed #888;pointer-events:none}#pw0 i{position:absolute;right:4px;font:11px sans-serif;color:#888;font-style:normal;pointer-events:none}
+.im{margin:8px 0}.im img{display:inline-block;max-height:930px;object-fit:contain}.cb{padding:3px 6px;font-size:11px;margin:1px}.ir{display:flex;align-items:center;gap:4px;margin:4px 0;font-size:12px;flex-wrap:wrap}.ir img{width:44px;height:36px;object-fit:cover;border:1px solid #bbb}.ir input,.ir select{width:auto;padding:2px}
 </style></head><body>
 <div id="ui">
 <h1>육군훈련소 보고서 양식툴</h1>
@@ -42,8 +43,10 @@ table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t the
 <div class="row"><input id="r0" value="작성"><input id="r1" value="검토"><input id="r2" value="결재"></div>
 <div class="row"><input id="n0" placeholder="작성자명"><input id="n1" placeholder="검토자명"><input id="n2" placeholder="결재자명"></div>
 <label>표지 요약 (표지 아래 상자)</label><textarea id="sum" style="height:90px;font-family:inherit"></textarea>
-<label>본문</label><textarea id="body"></textarea>
-<div class="help"><b>쓰는 법</b> (줄 맨 앞에 기호)<br># 대제목 → 1. 2. 자동번호<br>- 항목 → □ &nbsp;&nbsp; -- → ◦ &nbsp;&nbsp; --- → ∙ &nbsp;&nbsp; * → ※<br>| 칸1 | 칸2 | → 표 (첫 줄은 제목줄)</div>
+<label>본문</label>
+<div><button class="cb" style="background:#d00000" onmousedown="event.preventDefault()" onclick="colSel('빨강')">빨강</button><button class="cb" style="background:#0000ff" onmousedown="event.preventDefault()" onclick="colSel('파랑')">파랑</button><button class="cb" style="background:#007a33" onmousedown="event.preventDefault()" onclick="colSel('초록')">초록</button><button class="cb" style="background:#e67300" onmousedown="event.preventDefault()" onclick="colSel('주황')">주황</button><button class="cb" style="background:#7a2ea8" onmousedown="event.preventDefault()" onclick="colSel('보라')">보라</button><button class="cb" style="background:#666" onmousedown="event.preventDefault()" onclick="colSel('회색')">회색</button><input type="color" id="cc" value="#ff6600" style="width:34px;height:24px;padding:0;vertical-align:middle"><button class="cb" onmousedown="event.preventDefault()" onclick="colSel($('cc').value)">이 색</button><button class="cb g" onmousedown="event.preventDefault()" onclick="colClr()">색 해제</button></div><textarea id="body"></textarea>
+<div class="help"><b>쓰는 법</b> (줄 맨 앞에 기호)<br>글씨색: 글씨를 드래그한 뒤 위 색 버튼 → {빨강:글씨}<br>그림: 아래 「그림 넣기」 → [그림 1 | 50% | 가운데]<br># 대제목 → 1. 2. 자동번호<br>- 항목 → □ &nbsp;&nbsp; -- → ◦ &nbsp;&nbsp; --- → ∙ &nbsp;&nbsp; * → ※<br>| 칸1 | 칸2 | → 표 (첫 줄은 제목줄)</div>
+<label>그림 넣기 (원하는 위치·크기)</label><div id="il"></div><button class="g" onclick="$('fi').click()">그림 추가</button><input type="file" id="fi" accept="image/*" multiple hidden>
 <label>장별 사진 (한 장씩 고화질로 복사·저장)</label><div id="pl"></div><button onclick="capAll()">모든 장 PNG 저장</button><button onclick="doPrint()">PDF/인쇄</button><button class="g" style="background:#a33" onclick="resetAll(0)">초기화(예시 양식)</button><button class="g" onclick="resetAll(1)">빈 문서로 시작</button><br><button class="g" onclick="document.getElementById('f').click()">사진·파일 불러와 수정</button><button class="g" onclick="saveFile()">수정용 파일 저장</button><button onclick="saveHwp()">한글에서 편집 (.docx)</button><input type="file" id="f" accept="image/*,.json,.txt" multiple hidden>
 <div class="help" id="st">저장한 PNG나 수정용 파일(.json)을 불러오면 내용이 그대로 복원됩니다. 여러 개를 한꺼번에 선택하거나 끌어다 놓을 수 있습니다. 일반 사진·캡처·.txt는 본문만 읽어옵니다(오타 가능).</div>
 </div>
@@ -56,7 +59,7 @@ table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t the
 <script>
 const LOGO="logo.png",IDS=['kind','title','org','name','date','auto','no','keep','open','r0','r1','r2','n0','n1','n2','sum','body'];
 const $=i=>document.getElementById(i),esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-let sigs=['','',''],cur=0,LB=[],mod='',loaded=false;
+let sigs=['','',''],cur=0,LB=[],mod='',loaded=false,imgs={};
 const API='https://abacus.jasoncameron.dev/hit/armytc-report-tool/export';
 const iso=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 const effIso=()=>$('auto').value=='1'?iso():$('date').value;
@@ -81,41 +84,47 @@ const SAMPLE=`# 개요
 - 결과 보고 : 훈련 종료 후 서면 보고
 * 승인해 주시면 내실 있게 추진하겠습니다.`;
 const TPL={kind:'보고서',title:'2027년 ○○ 훈련 계획',org:'육군훈련소',name:'중위 홍길동',date:'',auto:'1',no:'',keep:'1년',open:'공개',r0:'작성',r1:'검토',r2:'결재',n0:'홍길동',n1:'김철수',n2:'이순신',sum:'◦ 신병 교육훈련 계획 보고임.\n  ·기간 : 11. 20.(금) ~ 11. 21.(토) / 2일\n  ·대상 : 신병 교육 대상자\n※ 승인해 주시면 내실 있게 추진하겠습니다.',body:SAMPLE};
-function applyTpl(blank){IDS.forEach(i=>$(i).value=TPL[i]);if(blank){['title','name','n0','n1','n2','sum','body'].forEach(i=>$(i).value='')}$('cover').checked=true;sigs=['','',''];mod='';loaded=false}
+function applyTpl(blank){IDS.forEach(i=>$(i).value=TPL[i]);if(blank){['title','name','n0','n1','n2','sum','body'].forEach(i=>$(i).value='')}$('cover').checked=true;sigs=['','',''];imgs={};renderIL();mod='';loaded=false}
 applyTpl(false);
 function today(){const d=new Date(),w='일월화수목금토'[d.getDay()];return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}.(${w})`}
 function fmt(v){if(!v)return today();const[y,m,d]=v.split('-').map(Number),w='일월화수목금토'[new Date(y,m-1,d).getDay()];return `${y}. ${m}. ${d}.(${w})`}
+const COL={'빨강':'#d00000','파랑':'#0000ff','초록':'#007a33','주황':'#e67300','보라':'#7a2ea8','회색':'#666666','검정':'#000000'};
+const colOf=c=>{c=c.trim();return COL[c]||(/^#[0-9a-fA-F]{3}([0-9a-fA-F]{3})?$/.test(c)?c:null)};
+const inl=t=>esc(t).replace(/\{([^:{}]+):([^{}]*)\}/g,(m,c,x)=>{const k=colOf(c);return k?`<span style="color:${k}">${x}</span>`:m});
+const IMR=/^\[그림\s*(\d+)\s*(?:\|\s*(\d+)\s*%?\s*)?(?:\|\s*(왼쪽|가운데|오른쪽)\s*)?\]\s*$/;
+const ALN={'왼쪽':'left','가운데':'center','오른쪽':'right'};
 function parse(t){const B=[];let n=0,tb=[];const fl=()=>{if(tb.length){B.push({t:tb});tb=[]}};
 for(let l of t.split('\n')){if(/^\s*\|/.test(l)){tb.push(l.trim().replace(/^\||\|$/g,'').split('|').map(s=>s.trim()));continue}fl();l=l.trimEnd();if(!l)continue;let m;
-if(m=l.match(/^#\s*(.*)/))B.push(`<div class=h1><b>${++n}</b>${esc(m[1])}</div>`);
-else if(m=l.match(/^---\s*(.*)/))B.push(`<p class=l3>∙ ${esc(m[1])}</p>`);
-else if(m=l.match(/^--\s*(.*)/))B.push(`<p class=l2>◦ ${esc(m[1])}</p>`);
-else if(m=l.match(/^-\s*(.*)/))B.push(`<p class=l1>□ ${esc(m[1])}</p>`);
-else if(m=l.match(/^\*\s*(.*)/))B.push(`<p class=nt>※ ${esc(m[1])}</p>`);
-else B.push(`<p>${esc(l)}</p>`)}fl();return B}
+if(m=l.match(IMR)){const im=imgs[+m[1]];B.push(im?`<div class=im style="text-align:${ALN[m[3]||'가운데']}"><img src="${im.d}" style="width:${Math.min(100,Math.max(5,+m[2]||50))}%;aspect-ratio:${im.w}/${im.h}"></div>`:`<p class=nt>[그림 ${m[1]} 없음]</p>`)}
+else if(m=l.match(/^#\s*(.*)/))B.push(`<div class=h1><b>${++n}</b>${inl(m[1])}</div>`);
+else if(m=l.match(/^---\s*(.*)/))B.push(`<p class=l3>∙ ${inl(m[1])}</p>`);
+else if(m=l.match(/^--\s*(.*)/))B.push(`<p class=l2>◦ ${inl(m[1])}</p>`);
+else if(m=l.match(/^-\s*(.*)/))B.push(`<p class=l1>□ ${inl(m[1])}</p>`);
+else if(m=l.match(/^\*\s*(.*)/))B.push(`<p class=nt>※ ${inl(m[1])}</p>`);
+else B.push(`<p>${inl(l)}</p>`)}fl();return B}
 const H=h=>{const d=document.createElement('div');d.innerHTML=h;return d.firstElementChild};
 function render(){const v=i=>$(i).value,dt=v('auto')=='1'?today():fmt(v('date')),k=v('kind'),D=$('doc');D.innerHTML='';
 const ap=[0,1,2].map(i=>`<td data-i=${i}>${sigs[i]?`<img src="${sigs[i]}">`:''}${esc(v('n'+i))}</td>`).join('');
 const hd=`<div class=top><table class="meta v"><tr><th>문서번호</th><td>${esc(v('no'))||'미부여'}</td></tr><tr><th>보존기간</th><td>${esc(v('keep'))}</td></tr><tr><th>작성일</th><td>${dt}</td></tr><tr><th>최종수정일</th><td>${mod||'-'}</td></tr><tr><th>공개구분</th><td class="${v('open')!='공개'?'rd':''}">${v('open')}</td></tr></table><table class=ap><tr>${[0,1,2].map(i=>`<th>${esc(v('r'+i))}</th>`).join('')}</tr><tr>${ap}</tr></table></div>`;
 const cv=$('cover').checked;
-if(cv)D.appendChild(H(`<div class="page cover"><img class=lg src="logo.png">${hd}<div class=ct>${esc(v('title'))}<br><span style="font-size:22px;font-weight:400;letter-spacing:0">(${k})</span></div><div class=sumbox>${esc(v('sum'))}</div></div>`));
+if(cv)D.appendChild(H(`<div class="page cover"><img class=lg src="logo.png">${hd}<div class=ct>${esc(v('title'))}<br><span style="font-size:22px;font-weight:400;letter-spacing:0">(${k})</span></div><div class=sumbox>${inl(v('sum'))}</div></div>`));
 let pc;const mk=()=>{const p=H('<div class=page><img class=sl src="logo.png"><div class=pc></div></div>');D.appendChild(p);return pc=p.querySelector('.pc')};
 const over=()=>pc.scrollHeight>pc.clientHeight+1;mk();
 if(!cv){pc.appendChild(H(hd));pc.appendChild(H(`<div class=title>${esc(v('title'))}</div>`))}
 const add=e=>{pc.appendChild(e);if(over()){pc.removeChild(e);const mv=[e],l=pc.lastElementChild;if(l&&l.classList.contains('h1')){pc.removeChild(l);mv.unshift(l)}mk();mv.forEach(x=>pc.appendChild(x))}};
-const mt=head=>{const t=H('<table class=t><thead><tr>'+head.map(c=>`<th>${esc(c)}</th>`).join('')+'</tr></thead><tbody></tbody></table>');return t};
+const mt=head=>{const t=H('<table class=t><thead><tr>'+head.map(c=>`<th>${inl(c)}</th>`).join('')+'</tr></thead><tbody></tbody></table>');return t};
 for(const b of parse(v('body'))){
  if(typeof b=='string'){add(H(b));continue}
  const[head,...rows]=b.t;let t=mt(head);pc.appendChild(t);if(over()){pc.removeChild(t);mk();pc.appendChild(t)}
- for(const r of rows){const tr=H('<table><tr>'+r.map(c=>`<td>${esc(c)}</td>`).join('')+'</tr></table>').querySelector('tr');t.tBodies[0].appendChild(tr);
+ for(const r of rows){const tr=H('<table><tr>'+r.map(c=>`<td>${inl(c)}</td>`).join('')+'</tr></table>').querySelector('tr');t.tBodies[0].appendChild(tr);
   if(over()){t.tBodies[0].removeChild(tr);if(!t.tBodies[0].children.length)pc.removeChild(t);mk();t=mt(head);pc.appendChild(t);t.tBodies[0].appendChild(tr)}}}
 add(H(`<div><div class=by>${dt}${mod?`<br><span style="font-weight:400;font-size:13px">(최종 수정 ${mod})</span>`:''}<br>${esc(v('org'))} ${esc(v('name'))}</div><div class=end>// 끝 //</div></div>`));
 const ps=[...D.querySelectorAll('.page:not(.cover)')];ps.forEach((p,i)=>p.appendChild(H(`<div class=pn>${ps.length}-${i+1}</div>`)));
 LB=[...(D.querySelector('.cover')?['표지']:[]),...ps.map((_,i)=>`${ps.length}-${i+1}`)];
 $('pl').innerHTML=LB.map((l,i)=>`<div class=pr><span>${l}${l=='표지'?'':'쪽'}</span><button onclick="cap('copy',${i})">복사</button><button onclick="cap('png',${i})">저장</button></div>`).join('');
-localStorage.setItem('armyRpt',JSON.stringify(data()))}
-function data(){const o={sigs,mod,iso:effIso()};IDS.forEach(i=>o[i]=$(i).value);o.cover=$('cover').checked;return o}
-function load(o,ff){IDS.forEach(i=>{if(o[i]!=null)$(i).value=o[i]});$('cover').checked=o.cover!==false;sigs=o.sigs||['','',''];mod=o.mod||'';if(ff&&o.iso){$('date').value=o.iso;$('auto').value='0'}loaded=!!ff;render()}
+try{localStorage.setItem('armyRpt',JSON.stringify(data()))}catch(e){}}
+function data(){const o={sigs,mod,iso:effIso(),imgs};IDS.forEach(i=>o[i]=$(i).value);o.cover=$('cover').checked;return o}
+function load(o,ff){IDS.forEach(i=>{if(o[i]!=null)$(i).value=o[i]});$('cover').checked=o.cover!==false;sigs=o.sigs||['','',''];imgs=o.imgs||{};renderIL();mod=o.mod||'';if(ff&&o.iso){$('date').value=o.iso;$('auto').value='0'}loaded=!!ff;render()}
 const T=new Uint32Array(256).map((_,n)=>{let c=n;for(let k=0;k<8;k++)c=c&1?0xedb88320^(c>>>1):c>>>1;return c>>>0});
 const crc=u=>{let c=~0;for(const b of u)c=T[(c^b)&255]^(c>>>8);return ~c>>>0};
 function embed(u,txt){const bd=new TextEncoder().encode('ArmyRpt\0'+btoa(unescape(encodeURIComponent(txt)))),ty=[116,69,88,116],ch=new Uint8Array(12+bd.length),dv=new DataView(ch.buffer);
@@ -164,6 +173,7 @@ const X=t=>String(t).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/&/g,'&
 const bd=(c,z)=>`w:val="single" w:sz="${z||4}" w:space="0" w:color="${c||'000000'}"`;
 const NS='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"';
 function R(t,o={}){const a=o.f||'Times New Roman',e=o.f||'휴먼명조',z=o.z||23;return `<w:r><w:rPr><w:rFonts w:ascii="${a}" w:hAnsi="${a}" w:eastAsia="${e}"/>${o.b?'<w:b/>':''}${o.c?`<w:color w:val="${o.c}"/>`:''}${o.sp?`<w:spacing w:val="${o.sp}"/>`:''}<w:sz w:val="${z}"/><w:szCs w:val="${z}"/>${o.box?`<w:bdr ${bd('0000FF',12)}/>`:''}</w:rPr><w:t xml:space="preserve">${X(t)}</w:t></w:r>`}
+const RS=(t,o={})=>{let out='',last=0;t.replace(/\{([^:{}]+):([^{}]*)\}/g,(m,c,x,i)=>{const k=colOf(c);if(!k)return m;if(i>last)out+=R(t.slice(last,i),o);let h=k.slice(1);if(h.length==3)h=h.replace(/./g,'$&$&');out+=R(x,{...o,c:h.toUpperCase()});last=i+m.length;return m});if(last<t.length)out+=R(t.slice(last),o);return out||R('',o)};
 function P(r,o={}){return `<w:p><w:pPr>${o.kn?'<w:keepNext/>':''}${o.bd?`<w:pBdr>${o.bd}</w:pBdr>`:''}<w:spacing w:before="${o.b4||0}" w:after="${o.af==null?40:o.af}" w:line="${o.ln||340}" w:lineRule="auto"/>${o.l!=null?`<w:ind w:left="${o.l}" w:hanging="${o.h||0}"/>`:''}${o.j?`<w:jc w:val="${o.j}"/>`:''}</w:pPr>${r||''}</w:p>`}
 const TC=(w,c,o={})=>`<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${o.shd?`<w:shd w:val="clear" w:color="auto" w:fill="${o.shd}"/>`:''}<w:vAlign w:val="${o.va||'center'}"/></w:tcPr>${c||'<w:p/>'}</w:tc>`;
 const TB=(ws,rows,o={})=>`<w:tbl><w:tblPr><w:tblW w:w="${ws.reduce((a,b)=>a+b,0)}" w:type="dxa"/>${o.j?`<w:jc w:val="${o.j}"/>`:''}<w:tblBorders>${['top','left','bottom','right','insideH','insideV'].map(k=>`<w:${k} ${o.nb?'w:val="nil"':bd()}/>`).join('')}</w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="80" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${ws.map(w=>`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${rows.map(r=>`<w:tr><w:trPr>${r.h?`<w:trHeight w:val="${r.h}" w:hRule="atLeast"/>`:''}${r.hd?'<w:tblHeader/>':''}</w:trPr>${r.c.map((c,i)=>TC(ws[i],c.p,c)).join('')}</w:tr>`).join('')}</w:tbl>`;
@@ -171,7 +181,7 @@ const IMG=(rid,cx,cy,id)=>`<w:r><w:drawing><wp:inline distT="0" distB="0" distL=
 const FLD=(ins,c)=>`<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> ${ins} </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>${c}</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>`;
 function parseD(t){const B=[];let n=0,tb=[];const fl=()=>{if(tb.length){B.push({k:'tb',rows:tb});tb=[]}};
 for(let l of t.split('\n')){if(/^\s*\|/.test(l)){tb.push(l.trim().replace(/^\||\|$/g,'').split('|').map(s=>s.trim()));continue}fl();l=l.trimEnd();if(!l)continue;let m;
-if(m=l.match(/^#\s*(.*)/))B.push({k:'h1',n:++n,t:m[1]});else if(m=l.match(/^---\s*(.*)/))B.push({k:'l3',t:m[1]});else if(m=l.match(/^--\s*(.*)/))B.push({k:'l2',t:m[1]});else if(m=l.match(/^-\s*(.*)/))B.push({k:'l1',t:m[1]});else if(m=l.match(/^\*\s*(.*)/))B.push({k:'nt',t:m[1]});else B.push({k:'p',t:l})}fl();return B}
+if(m=l.match(IMR))B.push({k:'im',id:+m[1],w:Math.min(100,Math.max(5,+m[2]||50)),al:{'왼쪽':'left','가운데':'center','오른쪽':'right'}[m[3]||'가운데']});else if(m=l.match(/^#\s*(.*)/))B.push({k:'h1',n:++n,t:m[1]});else if(m=l.match(/^---\s*(.*)/))B.push({k:'l3',t:m[1]});else if(m=l.match(/^--\s*(.*)/))B.push({k:'l2',t:m[1]});else if(m=l.match(/^-\s*(.*)/))B.push({k:'l1',t:m[1]});else if(m=l.match(/^\*\s*(.*)/))B.push({k:'nt',t:m[1]});else B.push({k:'p',t:l})}fl();return B}
 function zip(files){const en=new TextEncoder(),parts=[],cd=[];let off=0;
 for(const f of files){const nm=en.encode(f.n),c=crc(f.d),h=new Uint8Array(30+nm.length),v=new DataView(h.buffer);
 v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint16(6,0x0800,true);v.setUint16(12,0x21,true);v.setUint32(14,c,true);v.setUint32(18,f.d.length,true);v.setUint32(22,f.d.length,true);v.setUint16(26,nm.length,true);h.set(nm,30);parts.push(h,f.d);
@@ -193,17 +203,19 @@ const layout=TB([5300,4506],[{c:[{p:meta+'<w:p/>',va:'top'},{p:ap+'<w:p/>',va:'t
 const TB2='<w:top w:val="single" w:sz="36" w:space="14" w:color="0000FF"/><w:bottom w:val="single" w:sz="36" w:space="14" w:color="0000FF"/>';
 const PG='<w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="900" w:right="1050" w:bottom="1000" w:left="1050" w:header="400" w:footer="500" w:gutter="0"/>';
 let cover='';
-if(cv)cover=(logo?P(IMG('rIdL',2381250,Math.round(2381250*lh/lw),1),{j:'center',af:300}):'')+layout+P('',{b4:2200,af:0})+P(R(v('title'),{f:HF,b:1,z:54,sp:60}),{j:'center',bd:TB2,af:0,ln:400})+P(R('('+k+')',{f:HF,z:33}),{j:'center',bd:TB2,af:0})+P('',{b4:2200,af:0})+TB([7800],[{c:[{p:v('sum').split('\n').map(l=>P(R(l,{z:21}),{af:20})).join('')||P(''),va:'top'}]}],{j:'center'})+`<w:p><w:pPr><w:sectPr>${PG}</w:sectPr></w:pPr></w:p>`;
+if(cv)cover=(logo?P(IMG('rIdL',2381250,Math.round(2381250*lh/lw),1),{j:'center',af:300}):'')+layout+P('',{b4:2200,af:0})+P(R(v('title'),{f:HF,b:1,z:54,sp:60}),{j:'center',bd:TB2,af:0,ln:400})+P(R('('+k+')',{f:HF,z:33}),{j:'center',bd:TB2,af:0})+P('',{b4:2200,af:0})+TB([7800],[{c:[{p:v('sum').split('\n').map(l=>P(RS(l,{z:21}),{af:20})).join('')||P(''),va:'top'}]}],{j:'center'})+`<w:p><w:pPr><w:sectPr>${PG}</w:sectPr></w:pPr></w:p>`;
 const body=[];if(!cv)body.push(layout,P(R(v('title'),{f:HF,b:1,z:48,sp:40}),{j:'center',bd:TB2,b4:500,af:300,ln:400}));
-const W=9806;
+const W=9806,usedI={};let dn=0;
 for(const b of parseD(v('body'))){
-if(b.k=='h1')body.push(P(R(String(b.n),{f:HF,b:1,c:'0000FF',z:24,box:1})+R(' '+b.t,{f:HF,b:1,c:'0000FF',z:28}),{kn:1,b4:300,af:100}));
-else if(b.k=='l1')body.push(P(R('□ '+b.t,{b:1}),{l:230,h:230,b4:140}));
-else if(b.k=='l2')body.push(P(R('◦ '+b.t),{l:460,h:230}));
-else if(b.k=='l3')body.push(P(R('∙ '+b.t),{l:700,h:230}));
-else if(b.k=='nt')body.push(P(R('※ '+b.t,{z:21}),{l:560,h:300}));
-else if(b.k=='p')body.push(P(R(b.t)));
-else{const n=Math.max(...b.rows.map(r=>r.length)),ws=Array(n).fill(Math.floor(W/n));body.push(TB(ws,b.rows.map((r,ri)=>({hd:ri==0,c:Array.from({length:n},(_,i)=>({p:P(R(r[i]||'',{z:22,b:ri==0}),{j:'center',af:0}),shd:ri==0?'E6ECFF':null}))})))+P('',{af:0}))}}
+if(b.k=='h1')body.push(P(R(String(b.n),{f:HF,b:1,c:'0000FF',z:24,box:1})+RS(' '+b.t,{f:HF,b:1,c:'0000FF',z:28}),{kn:1,b4:300,af:100}));
+else if(b.k=='l1')body.push(P(RS('□ '+b.t,{b:1}),{l:230,h:230,b4:140}));
+else if(b.k=='l2')body.push(P(RS('◦ '+b.t),{l:460,h:230}));
+else if(b.k=='l3')body.push(P(RS('∙ '+b.t),{l:700,h:230}));
+else if(b.k=='nt')body.push(P(RS('※ '+b.t,{z:21}),{l:560,h:300}));
+else if(b.k=='im'){const im=imgs[b.id];if(im){if(!usedI[b.id]){files.push({n:`word/media/img${b.id}.jpg`,d:Uint8Array.from(atob(im.d.split(',')[1]),c=>c.charCodeAt(0))});dr.push([`rIdI${b.id}`,'image',`media/img${b.id}.jpg`]);usedI[b.id]=1}
+let cx=Math.round(6226810*b.w/100),cy=Math.round(cx*im.h/im.w);if(cy>9000000){cy=9000000;cx=Math.round(cy*im.w/im.h)}body.push(P(IMG(`rIdI${b.id}`,cx,cy,100+(dn++)),{j:b.al}))}}
+else if(b.k=='p')body.push(P(RS(b.t)));
+else{const n=Math.max(...b.rows.map(r=>r.length)),ws=Array(n).fill(Math.floor(W/n));body.push(TB(ws,b.rows.map((r,ri)=>({hd:ri==0,c:Array.from({length:n},(_,i)=>({p:P(RS(r[i]||'',{z:22,b:ri==0}),{j:'center',af:0}),shd:ri==0?'E6ECFF':null}))})))+P('',{af:0}))}}
 body.push(P(R(dt,{b:1}),{j:'right',b4:500,af:0}));if(mod)body.push(P(R('(최종 수정 '+mod+')',{z:20}),{j:'right',af:0}));
 body.push(P(R(v('org')+' '+v('name'),{b:1}),{j:'right',af:0}),P(R('// 끝 //'),{j:'center',b4:500}));
 const sect=`<w:sectPr><w:headerReference w:type="default" r:id="rId1"/><w:footerReference w:type="default" r:id="rId2"/><w:type w:val="nextPage"/>${PG}<w:pgNumType w:start="1"/></w:sectPr>`;
@@ -211,13 +223,24 @@ const X0='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',RT='http://sc
 const hcy=323850,hdr=`${X0}<w:hdr ${NS}>${logo?P(IMG('rIdH',Math.round(hcy*lw/lh),hcy,2),{j:'right',af:0}):P('')}</w:hdr>`;
 const ftr=`${X0}<w:ftr ${NS}>${P(FLD(cv?'SECTIONPAGES':'NUMPAGES',tot)+'<w:r><w:t>-</w:t></w:r>'+FLD('PAGE',1),{j:'center',af:0})}</w:ftr>`;
 const sty=`${X0}<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:eastAsia="휴먼명조"/><w:sz w:val="23"/><w:szCs w:val="23"/><w:lang w:val="en-US" w:eastAsia="ko-KR"/></w:rPr></w:rPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>`;
-const ct=`${X0}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>`;
+const ct=`${X0}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>`;
 const rl=a=>`${X0}<Relationships xmlns="${PK}">${a.map(([i,t,g])=>`<Relationship Id="${i}" Type="${RT}${t}" Target="${g}"/>`).join('')}</Relationships>`;
 const doc=`${X0}<w:document ${NS}><w:body>${cover}${body.join('')}${sect}</w:body></w:document>`;
 const all=[{n:'[Content_Types].xml',d:en.encode(ct)},{n:'_rels/.rels',d:en.encode(rl([['rId1','officeDocument','word/document.xml']]))},{n:'word/document.xml',d:en.encode(doc)},{n:'word/_rels/document.xml.rels',d:en.encode(rl(dr))},{n:'word/header1.xml',d:en.encode(hdr)},{n:'word/_rels/header1.xml.rels',d:en.encode(rl(logo?[['rIdH','image','media/logo.png']]:[]))},{n:'word/footer1.xml',d:en.encode(ftr)},{n:'word/styles.xml',d:en.encode(sty)},...files];
 return{blob:zip(all),logo:!!logo}}
 async function saveHwp(){if(!await stamp())return;const r=await makeDocx(),a=document.createElement('a');a.href=URL.createObjectURL(r.blob);a.download=($('title').value||'문서')+'.docx';a.click();
 st('한글 편집용 파일(.docx)을 저장했습니다. 한글에서 [파일 > 불러오기]로 열고, 필요하면 .hwp로 다시 저장하세요.'+(r.logo?'':' (로고 파일을 찾지 못해 로고는 빠졌습니다. GitHub 사이트 주소에서 사용하세요.)'))}
+
+function colSel(c){const ta=$('body'),s0=ta.selectionStart,e0=ta.selectionEnd;let sel=ta.value.slice(s0,e0);
+if(!sel)sel='글씨';else sel=sel.replace(/[{}]/g,'').split('\n').map(l=>{if(!l.trim())return l;if(/^\s*\|/.test(l))return l.split('|').map((x,i,a)=>(i==0||i==a.length-1||!x.trim())?x:` {${c}:${x.trim()}} `).join('|');const m=l.match(/^(\s*(?:#|-{1,3}|\*)\s+)?(.*)$/);return (m[1]||'')+`{${c}:${m[2]}}`}).join('\n');
+if(!ta.value.slice(s0,e0))sel=`{${c}:${sel}}`;ta.setRangeText(sel,s0,e0,'end');ta.focus();ta.dispatchEvent(new Event('input'))}
+function colClr(){const ta=$('body'),s0=ta.selectionStart,e0=ta.selectionEnd;if(s0==e0)return;ta.setRangeText(ta.value.slice(s0,e0).replace(/\{[^:{}]+:([^{}]*)\}/g,'$1'),s0,e0,'select');ta.dispatchEvent(new Event('input'))}
+function renderIL(){const ids=Object.keys(imgs);$('il').innerHTML=ids.map(id=>{const m=imgs[id];return `<div class=ir><img src="${m.d}"><b>그림 ${id}</b><input type=number min=5 max=100 value=${m.sw||50} style="width:56px" oninput="imgs[${id}].sw=this.value">%<select onchange="imgs[${id}].sa=this.value">${['가운데','왼쪽','오른쪽'].map(a=>`<option${a==(m.sa||'가운데')?' selected':''}>${a}</option>`).join('')}</select><button class="cb" onclick="insImg(${id})">본문에 삽입</button><button class="cb g" onclick="delImg(${id})">삭제</button></div>`}).join('')}
+function insImg(id){const m=imgs[id],ta=$('body'),p=ta.selectionStart,v=ta.value,pre=p>0&&v[p-1]!='\n'?'\n':'',post=v[p]&&v[p]!='\n'?'\n':'\n';ta.setRangeText(`${pre}[그림 ${id} | ${Math.min(100,Math.max(5,+m.sw||50))}% | ${m.sa||'가운데'}]${post}`,p,ta.selectionEnd,'end');ta.dispatchEvent(new Event('input'))}
+function delImg(id){delete imgs[id];$('body').value=$('body').value.split('\n').filter(l=>{const m=l.match(IMR);return!(m&&+m[1]==id)}).join('\n');renderIL();if(loaded)mod=today();render()}
+$('fi').onchange=async e=>{for(const f of e.target.files){if(!f.type.startsWith('image/'))continue;const bm=await createImageBitmap(f),sc=Math.min(1,1400/bm.width),w=Math.round(bm.width*sc),h=Math.round(bm.height*sc),c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,w,h);x.drawImage(bm,0,0,w,h);
+const id=Math.max(0,...Object.keys(imgs).map(Number))+1;imgs[id]={d:c.toDataURL('image/jpeg',.88),w,h,sw:50,sa:'가운데'}}
+e.target.value='';renderIL();if(loaded)mod=today();render()};
 async function saveFile(){if(!await stamp())return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data())],{type:'application/json'}));a.download=($('title').value||'문서')+'.json';a.click()}
 $('f').onchange=e=>{if(e.target.files.length)fromFiles(e.target.files);e.target.value=''};
 window.addEventListener('paste',e=>{const f=[...e.clipboardData.files].filter(x=>x.type.startsWith('image/'));if(f.length){e.preventDefault();fromFiles(f)}});

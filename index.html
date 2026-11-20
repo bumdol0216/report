@@ -35,7 +35,7 @@ table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t the
 <div id="ui">
 <h1>육군훈련소 보고서 양식툴</h1>
 <button class="g" onclick="undo()">되돌리기 (Ctrl+Z)</button><button class="g" onclick="redo()">다시 실행 (Ctrl+Y)</button>
-<label>문서 종류</label><select id="kind"><option>보고서</option><option>계획서</option><option>제안서</option><option>검토서</option><option>시행 지침서</option><option>긴급 지시문</option></select>
+<label>문서 종류</label><select id="kind"><option>보고서</option><option>계획서</option><option>제안서</option><option>검토서</option><option>시행 지침서</option><option>긴급 지시문</option><option>시말서</option></select>
 <label>제목</label><input id="title" value="2027년 ○○ 훈련 계획">
 <div class="row"><div><label>소속</label><input id="org" value="육군훈련소"></div><div><label>작성자 계급·이름</label><input id="name" value="중위 홍길동"></div></div>
 <div class="row"><div><label>작성일</label><input id="date" type="date"></div><div><label>자동 날짜</label><select id="auto"><option value="1">오늘로 자동</option><option value="0">직접 지정</option></select></div></div>
@@ -102,7 +102,7 @@ else if(m=l.match(/^-\s*(.*)/))B.push(`<p class=l1>□ ${inl(m[1])}</p>`);
 else if(m=l.match(/^\*\s*(.*)/))B.push(`<p class=nt>※ ${inl(m[1])}</p>`);
 else B.push(`<p>${inl(l)}</p>`)}fl();return B}
 const H=h=>{const d=document.createElement('div');d.innerHTML=h;return d.firstElementChild};
-function render(){const v=i=>$(i).value,dt=v('auto')=='1'?today():fmt(v('date')),k=v('kind'),D=$('doc');D.innerHTML='';const urg=k=='긴급 지시문';D.classList.toggle('urg',urg);const extra=(v('to')?`<tr><th>수신</th><td>${esc(v('to'))}</td></tr>`:'')+(v('due')?`<tr><th>${urg?'조치기한':'시행일'}</th><td>${esc(v('due'))}</td></tr>`:'');
+function render(){const v=i=>$(i).value,dt=v('auto')=='1'?today():fmt(v('date')),k=v('kind'),D=$('doc');D.innerHTML='';const urg=k=='긴급 지시문';D.classList.toggle('urg',urg);const extra=(v('to')?`<tr><th>${k=='시말서'?'제출처':'수신'}</th><td>${esc(v('to'))}</td></tr>`:'')+(v('due')?`<tr><th>${urg?'조치기한':'시행일'}</th><td>${esc(v('due'))}</td></tr>`:'');
 const ap=[0,1,2].map(i=>`<td data-i=${i}>${sigs[i]?`<img src="${sigs[i]}">`:''}${esc(v('n'+i))}</td>`).join('');
 const hd=`<div>${urg?'<div class=urgent>긴 급</div>':''}<div class=top><table class="meta v"><tr><th>문서번호</th><td>${esc(v('no'))||'미부여'}</td></tr><tr><th>보존기간</th><td>${esc(v('keep'))}</td></tr><tr><th>작성일</th><td>${dt}</td></tr><tr><th>최종수정일</th><td>${mod||'-'}</td></tr><tr><th>공개구분</th><td class="${v('open')!='공개'?'rd':''}">${v('open')}</td></tr>${extra}</table><table class=ap><tr>${[0,1,2].map(i=>`<th>${esc(v('r'+i))}</th>`).join('')}</tr><tr>${ap}</tr></table></div></div>`;
 const cv=$('cover').checked;
@@ -196,7 +196,7 @@ const files=[],dr=[['rId1','header','header1.xml'],['rId2','footer','footer1.xml
 if(logo){files.push({n:'word/media/logo.png',d:logo});dr.push(['rIdL','image','media/logo.png'])}
 for(let i=0;i<3;i++)if(sigs[i]){files.push({n:`word/media/sig${i}.png`,d:Uint8Array.from(atob(sigs[i].split(',')[1]),c=>c.charCodeAt(0))});dr.push([`rIdS${i}`,'image',`media/sig${i}.png`]);sig[i]=1}
 const op=v('open')!='공개',urg=k=='긴급 지시문',BC=urg?'D00000':'0000FF';
-const meta=TB([1500,2300],[['문서번호',v('no')||'미부여'],['보존기간',v('keep')],['작성일',dt],['최종수정일',mod||'-'],['공개구분',v('open')],...(v('to')?[['수신',v('to')]]:[]),...(v('due')?[[urg?'조치기한':'시행일',v('due')]]:[])].map(([a,b],i)=>({h:380,c:[{p:P(R(a,{z:19}),{j:'center',af:0}),shd:'EEEEEE'},{p:P(R(b,{z:19,c:a=='공개구분'&&op?'CC0000':null,b:a=='공개구분'&&op}),{j:'center',af:0})}]})));
+const meta=TB([1500,2300],[['문서번호',v('no')||'미부여'],['보존기간',v('keep')],['작성일',dt],['최종수정일',mod||'-'],['공개구분',v('open')],...(v('to')?[[k=='시말서'?'제출처':'수신',v('to')]]:[]),...(v('due')?[[urg?'조치기한':'시행일',v('due')]]:[])].map(([a,b],i)=>({h:380,c:[{p:P(R(a,{z:19}),{j:'center',af:0}),shd:'EEEEEE'},{p:P(R(b,{z:19,c:a=='공개구분'&&op?'CC0000':null,b:a=='공개구분'&&op}),{j:'center',af:0})}]})));
 const ap=TB([1500,1500,1500],[{c:[0,1,2].map(i=>({p:P(R(v('r'+i),{z:19}),{j:'center',af:0}),shd:'EEEEEE'}))},{h:1300,c:[0,1,2].map(i=>({va:'bottom',p:(sig[i]?P(IMG(`rIdS${i}`,700000,280000,20+i),{j:'center',af:0}):'')+P(R(v('n'+i),{z:18}),{j:'center',af:0})}))}],{j:'right'});
 const stamp=urg?TB([2400],[{c:[{p:P(R('긴  급',{f:HF,b:1,c:'D00000',z:44,sp:60}),{j:'center',af:0})}]}],{bc:'D00000'})+P('',{af:80}):'';
 const layout=TB([5300,4506],[{c:[{p:meta+'<w:p/>',va:'top'},{p:ap+'<w:p/>',va:'top'}]}],{nb:1});
@@ -269,6 +269,22 @@ body:`# 목적
 - 문의 : ○○과 (☎ 000-0000)
 - 본 지침 시행에 따라 기존 지침은 폐지
 * 이행 간 제한사항은 즉시 보고`},
+'시말서':{title:'시   말   서',keep:'1년',open:'비공개',to:'○○대대장 귀하',due:'',cover:false,sum:'',r0:'작성자',r1:'확인',r2:'지휘관',
+body:`# 인적 사항
+| 소속 | 계급 | 성명 | 군번 |
+| ○○대대 ○○중대 | 병장 | 홍길동 | 00-00000000 |
+# 사건 개요
+- 일시·장소 : 20xx. x. x.(요일) 00:00경, ○○ 일대
+- 사 유 : ○○ 규정 위반(○○ 행위)
+# 경위
+- ○○ 임무 수행 중 ○○ 사실이 있었음
+-- 당시 상황과 본인의 행동을 사실대로 기술
+# 잘못한 점 및 원인
+- 본인의 안일한 판단과 규정 준수 의식 부족이 원인임
+# 반성 및 재발 방지 다짐
+- 이번 일을 깊이 반성하며 규정을 철저히 준수하겠음
+-- 동일 사례 재발 시 어떠한 처벌도 감수하겠음
+위와 같이 사실과 다름없이 작성하여 시말서를 제출합니다.`},
 '긴급 지시문':{title:'○○ 사고 예방 긴급 조치 지시',keep:'1년',open:'대외비',to:'예하 전 부대 지휘관',due:'즉시(18:00까지)',cover:false,sum:'',
 body:`# 상황
 - ○○ 관련 사고가 발생하여 유사 사고 예방이 시급함
@@ -288,7 +304,7 @@ body:`# 상황
 * 지시 불이행 시 책임 소재를 명확히 하여 조치할 예정`}};
 $('kind').addEventListener('change',()=>{const k=$('kind').value;if(!(k in KT)&&k!='보고서')return;
 if(!confirm(`「${k}」 기본 양식(예시 내용·표지 설정)으로 바꿀까요?\n[취소]를 누르면 문서 종류 이름만 바뀝니다. (Ctrl+Z로 되돌릴 수 있습니다)`))return;
-const t=k=='보고서'?TPL:Object.assign({},TPL,KT[k]);['title','keep','open','to','due','sum','body'].forEach(i=>$(i).value=t[i]??'');$('cover').checked=t.cover!==false;if(loaded)mod=today();render()});
+const t=k=='보고서'?TPL:Object.assign({},TPL,KT[k]);['title','keep','open','to','due','sum','r0','r1','r2','body'].forEach(i=>$(i).value=t[i]??'');$('cover').checked=t.cover!==false;if(loaded)mod=today();render()});
 async function saveFile(){if(!await stamp())return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data())],{type:'application/json'}));a.download=($('title').value||'문서')+'.json';a.click()}
 $('f').onchange=e=>{if(e.target.files.length)fromFiles(e.target.files);e.target.value=''};
 window.addEventListener('paste',e=>{const f=[...e.clipboardData.files].filter(x=>x.type.startsWith('image/'));if(f.length){e.preventDefault();fromFiles(f)}});

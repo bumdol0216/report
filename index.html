@@ -15,11 +15,11 @@ button.g{background:#777}.help{font-size:11px;color:#555;background:#f3f6f0;padd
 #wrap{flex:1;overflow:auto;padding:16px;display:flex;justify-content:center}
 #doc{width:794px;background:#fff}.pc{height:993px;overflow:hidden}.pn{position:absolute;bottom:30px;left:0;right:0;text-align:center;font-size:13px}.page{width:794px;height:1123px;overflow:hidden;padding:60px 70px 0;position:relative;background:#fff;box-shadow:0 0 6px #0004;margin-bottom:16px;font-family:'Noto Serif KR',serif;font-size:15px;line-height:1.55;color:#000}
 .cap .page{box-shadow:none;margin:0;}
-.lg{display:block;width:250px;margin:0 auto 26px}.sl{position:absolute;top:20px;right:70px;height:34px}.ct{margin:120px 0 0;border-top:5px solid #0000ff;border-bottom:5px solid #0000ff;padding:28px 0;text-align:center;font:900 36px 'Noto Sans KR';letter-spacing:.12em;line-height:1.5}.sumbox{width:80%;margin:130px auto 0;border:1px solid #000;padding:16px 20px;font-size:14px;line-height:1.7;white-space:pre-wrap}.meta.v{font-size:12.5px}.meta.v th{width:76px}.meta.v td{width:118px}.rd{color:#c00;font-weight:700}
+.lg{display:block;width:250px;margin:0 auto 26px}.sl{position:absolute;top:20px;right:70px;height:34px}.ct{margin:120px 0 0;border-top:5px solid #0000ff;border-bottom:5px solid #0000ff;padding:28px 0;text-align:center;font:900 36px 'Noto Sans KR';letter-spacing:.12em;line-height:1.5}.sumbox{width:80%;margin:130px auto 0;border:1px solid #000;padding:16px 20px;font-size:14px;line-height:1.7;white-space:pre-wrap}.meta.v{font-size:12.5px}.meta.v th{width:76px}.meta.v td{width:170px}.rd{color:#c00;font-weight:700}
 .meta{border-collapse:collapse;font-size:12px}.meta td,.ap td{border:1px solid #000;padding:2px 6px;text-align:center}.meta th,.ap th{border:1px solid #000;background:#eee;padding:2px 6px;font-weight:400}
 .top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}.ap{border-collapse:collapse;font-size:12px}.ap td{width:76px;height:76px;cursor:pointer;vertical-align:bottom;padding:1px;font-size:11px}.ap img{max-width:72px;max-height:66px;display:block;margin:auto}
 .stamp{color:#c00;border:3px solid #c00;font:900 20px 'Noto Sans KR';padding:2px 14px;display:inline-block;margin-bottom:6px}
-.title{font:900 24px 'Noto Sans KR';text-align:center;border-bottom:5px solid #0000ff;border-top:5px solid #0000ff;padding:12px 0;margin:30px 0 22px}
+.title{font:900 24px 'Noto Sans KR';text-align:center;border-bottom:5px solid #0000ff;border-top:5px solid #0000ff;padding:12px 0;margin:20px 0 14px}
 .h1{font:700 19px 'Noto Sans KR';color:#0000ff;margin:20px 0 8px;display:flex;align-items:center;gap:9px}.h1 b{width:24px;height:24px;border:2px solid #0000ff;box-shadow:2px 2px 0 #0000ff;color:#0000ff;background:#fff;text-align:center;line-height:20px;font-size:13px}
 p{margin:3px 0}.l1{margin-top:9px;font-weight:700}.l2{padding-left:1em}.l3{padding-left:2.1em}.nt{padding-left:1.4em;font-size:14px}
 table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t thead th{background:#e6ecff}.t td,.t th{border:1px solid #000;padding:4px 6px;text-align:center}.t th{background:#e6ecff}
@@ -30,15 +30,17 @@ table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t the
 .pr{display:flex;align-items:center;gap:4px;font-size:13px;margin-top:4px}.pr span{width:64px;font-weight:700}
 #pw0{position:relative;width:400px;max-width:100%;aspect-ratio:400/160;border:1px solid #000;background:#fff}#pw0 canvas{position:absolute;left:0;width:100%;border:0;background:transparent}#pad{top:0;height:100%}#tx{top:70%;height:30%;pointer-events:none}#dv{position:absolute;left:0;right:0;top:70%;border-top:2px dashed #888;pointer-events:none}#pw0 i{position:absolute;right:4px;font:11px sans-serif;color:#888;font-style:normal;pointer-events:none}
 .cb{padding:3px 6px;font-size:11px;margin:1px}
+.urgent{display:inline-block;border:3px solid #d00000;color:#d00000;font:900 26px 'Noto Sans KR';letter-spacing:.3em;padding:2px 14px 2px 22px;margin-bottom:12px}.urg .h1{color:#d00000}.urg .h1 b{border-color:#d00000;box-shadow:2px 2px 0 #d00000;color:#d00000}.urg .ct,.urg .title{border-top-color:#d00000;border-bottom-color:#d00000}
 </style></head><body>
 <div id="ui">
 <h1>육군훈련소 보고서 양식툴</h1>
 <button class="g" onclick="undo()">되돌리기 (Ctrl+Z)</button><button class="g" onclick="redo()">다시 실행 (Ctrl+Y)</button>
-<label>문서 종류</label><select id="kind"><option>보고서</option><option>계획서</option><option>제안서</option><option>검토서</option></select>
+<label>문서 종류</label><select id="kind"><option>보고서</option><option>계획서</option><option>제안서</option><option>검토서</option><option>시행 지침서</option><option>긴급 지시문</option></select>
 <label>제목</label><input id="title" value="2027년 ○○ 훈련 계획">
 <div class="row"><div><label>소속</label><input id="org" value="육군훈련소"></div><div><label>작성자 계급·이름</label><input id="name" value="중위 홍길동"></div></div>
 <div class="row"><div><label>작성일</label><input id="date" type="date"></div><div><label>자동 날짜</label><select id="auto"><option value="1">오늘로 자동</option><option value="0">직접 지정</option></select></div></div>
 <div class="row"><div><label>문서번호 (자동)</label><input id="no" readonly placeholder="내보낼 때 자동"></div><div><label>보존기간</label><input id="keep" value="1년"></div><div><label>공개구분</label><select id="open"><option>공개</option><option>대외비</option><option>비공개</option></select></div></div>
+<div class="row"><div><label>수신(배부처)</label><input id="to" placeholder="비우면 표시 안 함"></div><div><label id="duel">시행일 / 조치기한</label><input id="due" placeholder="비우면 표시 안 함"></div></div>
 <label><input type="checkbox" id="cover" checked style="width:auto"> 표지(로고) 포함</label>
 <label>결재란 (직책 ↔ 문서의 칸을 누르면 서명)</label>
 <div class="row"><input id="r0" value="작성"><input id="r1" value="검토"><input id="r2" value="결재"></div>
@@ -57,7 +59,7 @@ table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t the
 <label style="margin:2px 0">이름 (결재란의 이름 칸이 이 내용으로 바뀝니다)</label><input id="pt" placeholder="예: 김철수" style="margin:0 0 4px"><br>
 <button onclick="sg()">확인</button><button class="g" onclick="clr()">그림 지우기</button><button class="g" onclick="$('m').style.display='none'">취소</button></div></div>
 <script>
-const LOGO="logo.png",IDS=['kind','title','org','name','date','auto','no','keep','open','r0','r1','r2','n0','n1','n2','sum','body'];
+const LOGO="logo.png",IDS=['to','due','kind','title','org','name','date','auto','no','keep','open','r0','r1','r2','n0','n1','n2','sum','body'];
 const $=i=>document.getElementById(i),esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 let sigs=['','',''],cur=0,LB=[],mod='',loaded=false;
 const API='https://abacus.jasoncameron.dev/hit/armytc-report-tool/export';
@@ -83,7 +85,7 @@ const SAMPLE=`# 개요
 - 훈련 간 건의사항은 작성자에게 보고
 - 결과 보고 : 훈련 종료 후 서면 보고
 * 승인해 주시면 내실 있게 추진하겠습니다.`;
-const TPL={kind:'보고서',title:'2027년 ○○ 훈련 계획',org:'육군훈련소',name:'중위 홍길동',date:'',auto:'1',no:'',keep:'1년',open:'공개',r0:'작성',r1:'검토',r2:'결재',n0:'홍길동',n1:'김철수',n2:'이순신',sum:'◦ 신병 교육훈련 계획 보고임.\n  ·기간 : 11. 20.(금) ~ 11. 21.(토) / 2일\n  ·대상 : 신병 교육 대상자\n※ 승인해 주시면 내실 있게 추진하겠습니다.',body:SAMPLE};
+const TPL={kind:'보고서',title:'2027년 ○○ 훈련 계획',org:'육군훈련소',name:'중위 홍길동',date:'',auto:'1',no:'',keep:'1년',open:'공개',to:'',due:'',r0:'작성',r1:'검토',r2:'결재',n0:'홍길동',n1:'김철수',n2:'이순신',sum:'◦ 신병 교육훈련 계획 보고임.\n  ·기간 : 11. 20.(금) ~ 11. 21.(토) / 2일\n  ·대상 : 신병 교육 대상자\n※ 승인해 주시면 내실 있게 추진하겠습니다.',body:SAMPLE};
 function applyTpl(blank){IDS.forEach(i=>$(i).value=TPL[i]);if(blank){['title','name','n0','n1','n2','sum','body'].forEach(i=>$(i).value='')}$('cover').checked=true;sigs=['','',''];mod='';loaded=false}
 applyTpl(false);
 function today(){const d=new Date(),w='일월화수목금토'[d.getDay()];return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}.(${w})`}
@@ -100,9 +102,9 @@ else if(m=l.match(/^-\s*(.*)/))B.push(`<p class=l1>□ ${inl(m[1])}</p>`);
 else if(m=l.match(/^\*\s*(.*)/))B.push(`<p class=nt>※ ${inl(m[1])}</p>`);
 else B.push(`<p>${inl(l)}</p>`)}fl();return B}
 const H=h=>{const d=document.createElement('div');d.innerHTML=h;return d.firstElementChild};
-function render(){const v=i=>$(i).value,dt=v('auto')=='1'?today():fmt(v('date')),k=v('kind'),D=$('doc');D.innerHTML='';
+function render(){const v=i=>$(i).value,dt=v('auto')=='1'?today():fmt(v('date')),k=v('kind'),D=$('doc');D.innerHTML='';const urg=k=='긴급 지시문';D.classList.toggle('urg',urg);const extra=(v('to')?`<tr><th>수신</th><td>${esc(v('to'))}</td></tr>`:'')+(v('due')?`<tr><th>${urg?'조치기한':'시행일'}</th><td>${esc(v('due'))}</td></tr>`:'');
 const ap=[0,1,2].map(i=>`<td data-i=${i}>${sigs[i]?`<img src="${sigs[i]}">`:''}${esc(v('n'+i))}</td>`).join('');
-const hd=`<div class=top><table class="meta v"><tr><th>문서번호</th><td>${esc(v('no'))||'미부여'}</td></tr><tr><th>보존기간</th><td>${esc(v('keep'))}</td></tr><tr><th>작성일</th><td>${dt}</td></tr><tr><th>최종수정일</th><td>${mod||'-'}</td></tr><tr><th>공개구분</th><td class="${v('open')!='공개'?'rd':''}">${v('open')}</td></tr></table><table class=ap><tr>${[0,1,2].map(i=>`<th>${esc(v('r'+i))}</th>`).join('')}</tr><tr>${ap}</tr></table></div>`;
+const hd=`<div>${urg?'<div class=urgent>긴 급</div>':''}<div class=top><table class="meta v"><tr><th>문서번호</th><td>${esc(v('no'))||'미부여'}</td></tr><tr><th>보존기간</th><td>${esc(v('keep'))}</td></tr><tr><th>작성일</th><td>${dt}</td></tr><tr><th>최종수정일</th><td>${mod||'-'}</td></tr><tr><th>공개구분</th><td class="${v('open')!='공개'?'rd':''}">${v('open')}</td></tr>${extra}</table><table class=ap><tr>${[0,1,2].map(i=>`<th>${esc(v('r'+i))}</th>`).join('')}</tr><tr>${ap}</tr></table></div></div>`;
 const cv=$('cover').checked;
 if(cv)D.appendChild(H(`<div class="page cover"><img class=lg src="logo.png">${hd}<div class=ct>${esc(v('title'))}<br><span style="font-size:22px;font-weight:400;letter-spacing:0">(${k})</span></div><div class=sumbox>${inl(v('sum'))}</div></div>`));
 let pc;const mk=()=>{const p=H('<div class=page><img class=sl src="logo.png"><div class=pc></div></div>');D.appendChild(p);return pc=p.querySelector('.pc')};
@@ -169,11 +171,11 @@ $('body').value=conv(txt.join('\n'));loaded=true;render();st(`${use.length}개 �
 const X=t=>String(t).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const bd=(c,z)=>`w:val="single" w:sz="${z||4}" w:space="0" w:color="${c||'000000'}"`;
 const NS='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"';
-function R(t,o={}){const a=o.f||'Times New Roman',e=o.f||'휴먼명조',z=o.z||23;return `<w:r><w:rPr><w:rFonts w:ascii="${a}" w:hAnsi="${a}" w:eastAsia="${e}"/>${o.b?'<w:b/>':''}${o.c?`<w:color w:val="${o.c}"/>`:''}${o.sp?`<w:spacing w:val="${o.sp}"/>`:''}<w:sz w:val="${z}"/><w:szCs w:val="${z}"/>${o.box?`<w:bdr ${bd('0000FF',12)}/>`:''}</w:rPr><w:t xml:space="preserve">${X(t)}</w:t></w:r>`}
+function R(t,o={}){const a=o.f||'Times New Roman',e=o.f||'휴먼명조',z=o.z||23;return `<w:r><w:rPr><w:rFonts w:ascii="${a}" w:hAnsi="${a}" w:eastAsia="${e}"/>${o.b?'<w:b/>':''}${o.c?`<w:color w:val="${o.c}"/>`:''}${o.sp?`<w:spacing w:val="${o.sp}"/>`:''}<w:sz w:val="${z}"/><w:szCs w:val="${z}"/>${o.box?`<w:bdr ${bd(o.c||'0000FF',12)}/>`:''}</w:rPr><w:t xml:space="preserve">${X(t)}</w:t></w:r>`}
 const RS=(t,o={})=>{let out='',last=0;t.replace(/\{([^:{}]+):([^{}]*)\}/g,(m,c,x,i)=>{const k=colOf(c);if(!k)return m;if(i>last)out+=R(t.slice(last,i),o);let h=k.slice(1);if(h.length==3)h=h.replace(/./g,'$&$&');out+=R(x,{...o,c:h.toUpperCase()});last=i+m.length;return m});if(last<t.length)out+=R(t.slice(last),o);return out||R('',o)};
 function P(r,o={}){return `<w:p><w:pPr>${o.kn?'<w:keepNext/>':''}${o.bd?`<w:pBdr>${o.bd}</w:pBdr>`:''}<w:spacing w:before="${o.b4||0}" w:after="${o.af==null?40:o.af}" w:line="${o.ln||340}" w:lineRule="auto"/>${o.l!=null?`<w:ind w:left="${o.l}" w:hanging="${o.h||0}"/>`:''}${o.j?`<w:jc w:val="${o.j}"/>`:''}</w:pPr>${r||''}</w:p>`}
 const TC=(w,c,o={})=>`<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${o.shd?`<w:shd w:val="clear" w:color="auto" w:fill="${o.shd}"/>`:''}<w:vAlign w:val="${o.va||'center'}"/></w:tcPr>${c||'<w:p/>'}</w:tc>`;
-const TB=(ws,rows,o={})=>`<w:tbl><w:tblPr><w:tblW w:w="${ws.reduce((a,b)=>a+b,0)}" w:type="dxa"/>${o.j?`<w:jc w:val="${o.j}"/>`:''}<w:tblBorders>${['top','left','bottom','right','insideH','insideV'].map(k=>`<w:${k} ${o.nb?'w:val="nil"':bd()}/>`).join('')}</w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="80" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${ws.map(w=>`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${rows.map(r=>`<w:tr><w:trPr>${r.h?`<w:trHeight w:val="${r.h}" w:hRule="atLeast"/>`:''}${r.hd?'<w:tblHeader/>':''}</w:trPr>${r.c.map((c,i)=>TC(ws[i],c.p,c)).join('')}</w:tr>`).join('')}</w:tbl>`;
+const TB=(ws,rows,o={})=>`<w:tbl><w:tblPr><w:tblW w:w="${ws.reduce((a,b)=>a+b,0)}" w:type="dxa"/>${o.j?`<w:jc w:val="${o.j}"/>`:''}<w:tblBorders>${['top','left','bottom','right','insideH','insideV'].map(k=>`<w:${k} ${o.nb?'w:val="nil"':bd(o.bc)}/>`).join('')}</w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:left w:w="80" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${ws.map(w=>`<w:gridCol w:w="${w}"/>`).join('')}</w:tblGrid>${rows.map(r=>`<w:tr><w:trPr>${r.h?`<w:trHeight w:val="${r.h}" w:hRule="atLeast"/>`:''}${r.hd?'<w:tblHeader/>':''}</w:trPr>${r.c.map((c,i)=>TC(ws[i],c.p,c)).join('')}</w:tr>`).join('')}</w:tbl>`;
 const IMG=(rid,cx,cy,id)=>`<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${id}" name="img${id}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${id}" name="img${id}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`;
 const FLD=(ins,c)=>`<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> ${ins} </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>${c}</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>`;
 function parseD(t){const B=[];let n=0,tb=[];const fl=()=>{if(tb.length){B.push({k:'tb',rows:tb});tb=[]}};
@@ -193,18 +195,19 @@ let lw=1,lh=1;if(logo){const m=await createImageBitmap(new Blob([logo]));lw=m.wi
 const files=[],dr=[['rId1','header','header1.xml'],['rId2','footer','footer1.xml'],['rId3','styles','styles.xml']],sig=[];
 if(logo){files.push({n:'word/media/logo.png',d:logo});dr.push(['rIdL','image','media/logo.png'])}
 for(let i=0;i<3;i++)if(sigs[i]){files.push({n:`word/media/sig${i}.png`,d:Uint8Array.from(atob(sigs[i].split(',')[1]),c=>c.charCodeAt(0))});dr.push([`rIdS${i}`,'image',`media/sig${i}.png`]);sig[i]=1}
-const op=v('open')!='공개';
-const meta=TB([1500,2300],[['문서번호',v('no')||'미부여'],['보존기간',v('keep')],['작성일',dt],['최종수정일',mod||'-'],['공개구분',v('open')]].map(([a,b],i)=>({h:380,c:[{p:P(R(a,{z:19}),{j:'center',af:0}),shd:'EEEEEE'},{p:P(R(b,{z:19,c:i==4&&op?'CC0000':null,b:i==4&&op}),{j:'center',af:0})}]})));
+const op=v('open')!='공개',urg=k=='긴급 지시문',BC=urg?'D00000':'0000FF';
+const meta=TB([1500,2300],[['문서번호',v('no')||'미부여'],['보존기간',v('keep')],['작성일',dt],['최종수정일',mod||'-'],['공개구분',v('open')],...(v('to')?[['수신',v('to')]]:[]),...(v('due')?[[urg?'조치기한':'시행일',v('due')]]:[])].map(([a,b],i)=>({h:380,c:[{p:P(R(a,{z:19}),{j:'center',af:0}),shd:'EEEEEE'},{p:P(R(b,{z:19,c:a=='공개구분'&&op?'CC0000':null,b:a=='공개구분'&&op}),{j:'center',af:0})}]})));
 const ap=TB([1500,1500,1500],[{c:[0,1,2].map(i=>({p:P(R(v('r'+i),{z:19}),{j:'center',af:0}),shd:'EEEEEE'}))},{h:1300,c:[0,1,2].map(i=>({va:'bottom',p:(sig[i]?P(IMG(`rIdS${i}`,700000,280000,20+i),{j:'center',af:0}):'')+P(R(v('n'+i),{z:18}),{j:'center',af:0})}))}],{j:'right'});
+const stamp=urg?TB([2400],[{c:[{p:P(R('긴  급',{f:HF,b:1,c:'D00000',z:44,sp:60}),{j:'center',af:0})}]}],{bc:'D00000'})+P('',{af:80}):'';
 const layout=TB([5300,4506],[{c:[{p:meta+'<w:p/>',va:'top'},{p:ap+'<w:p/>',va:'top'}]}],{nb:1});
-const TB2='<w:top w:val="single" w:sz="36" w:space="14" w:color="0000FF"/><w:bottom w:val="single" w:sz="36" w:space="14" w:color="0000FF"/>';
+const TB2=`<w:top w:val="single" w:sz="36" w:space="14" w:color="${BC}"/><w:bottom w:val="single" w:sz="36" w:space="14" w:color="${BC}"/>`;
 const PG='<w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="900" w:right="1050" w:bottom="1000" w:left="1050" w:header="400" w:footer="500" w:gutter="0"/>';
 let cover='';
-if(cv)cover=(logo?P(IMG('rIdL',2381250,Math.round(2381250*lh/lw),1),{j:'center',af:300}):'')+layout+P('',{b4:2200,af:0})+P(R(v('title'),{f:HF,b:1,z:54,sp:60}),{j:'center',bd:TB2,af:0,ln:400})+P(R('('+k+')',{f:HF,z:33}),{j:'center',bd:TB2,af:0})+P('',{b4:2200,af:0})+TB([7800],[{c:[{p:v('sum').split('\n').map(l=>P(RS(l,{z:21}),{af:20})).join('')||P(''),va:'top'}]}],{j:'center'})+`<w:p><w:pPr><w:sectPr>${PG}</w:sectPr></w:pPr></w:p>`;
-const body=[];if(!cv)body.push(layout,P(R(v('title'),{f:HF,b:1,z:48,sp:40}),{j:'center',bd:TB2,b4:500,af:300,ln:400}));
+if(cv)cover=(logo?P(IMG('rIdL',2381250,Math.round(2381250*lh/lw),1),{j:'center',af:300}):'')+stamp+layout+P('',{b4:2200,af:0})+P(R(v('title'),{f:HF,b:1,z:54,sp:60}),{j:'center',bd:TB2,af:0,ln:400})+P(R('('+k+')',{f:HF,z:33}),{j:'center',bd:TB2,af:0})+P('',{b4:2200,af:0})+TB([7800],[{c:[{p:v('sum').split('\n').map(l=>P(RS(l,{z:21}),{af:20})).join('')||P(''),va:'top'}]}],{j:'center'})+`<w:p><w:pPr><w:sectPr>${PG}</w:sectPr></w:pPr></w:p>`;
+const body=[];if(!cv)body.push(stamp,layout,P(R(v('title'),{f:HF,b:1,z:48,sp:40}),{j:'center',bd:TB2,b4:500,af:300,ln:400}));
 const W=9806;
 for(const b of parseD(v('body'))){
-if(b.k=='h1')body.push(P(R(String(b.n),{f:HF,b:1,c:'0000FF',z:24,box:1})+RS(' '+b.t,{f:HF,b:1,c:'0000FF',z:28}),{kn:1,b4:300,af:100}));
+if(b.k=='h1')body.push(P(R(String(b.n),{f:HF,b:1,c:BC,z:24,box:1})+RS(' '+b.t,{f:HF,b:1,c:BC,z:28}),{kn:1,b4:300,af:100}));
 else if(b.k=='l1')body.push(P(RS('□ '+b.t,{b:1}),{l:230,h:230,b4:140}));
 else if(b.k=='l2')body.push(P(RS('◦ '+b.t),{l:460,h:230}));
 else if(b.k=='l3')body.push(P(RS('∙ '+b.t),{l:700,h:230}));
@@ -240,6 +243,52 @@ function redo(){clearTimeout(hT);pushH();if(!redoS.length){st('다시 실행할 
 function undoPad(){if(!padH.length)return;g.putImageData(padH.pop(),0,0)}
 document.addEventListener('keydown',e=>{if(!(e.ctrlKey||e.metaKey))return;const k=e.key.toLowerCase(),md=$('m').style.display=='flex';
 if(k=='z'&&!e.shiftKey){e.preventDefault();md?undoPad():undo()}else if(k=='y'||(k=='z'&&e.shiftKey)){if(md)return;e.preventDefault();redo()}});
+
+const KT={'시행 지침서':{title:'2027년 ○○ 업무 시행 지침',keep:'3년',open:'공개',to:'전 부대 및 관련 부서',due:'2027. 1. 1.부',cover:true,
+sum:'◦ ○○ 업무 시행에 필요한 세부 지침을 하달함.\n  ·시행일 : 2027. 1. 1.부\n  ·적용 : 전 부대 및 관련 부서\n※ 지침 내용을 숙지하고 철저히 이행하기 바람.',
+body:`# 목적
+- 업무 시행에 필요한 기준과 절차를 명확히 하여 일관성 있는 업무 수행 보장
+# 근거
+- ○○ 규정 제○조(○○)
+- ○○ 지시(문서번호, 20xx. x. x.)
+# 적용 범위
+- 적용 대상 : 전 부대 및 관련 부서
+- 적용 기간 : 시행일부터 별도 지시 시까지
+# 일반 지침
+- 책임 있는 업무 수행
+-- 지휘관(자) 책임하 시행
+-- 분야별 담당자 지정 및 임무 부여
+- 안전 및 보안 철저
+* 대외비 문서는 보안 규정에 따라 관리
+# 세부 시행 지침
+| 구분 | 시행 내용 | 담당 | 기한 |
+| 준비 | 소요 판단 및 계획 수립 | ○○과 | 11. 30. |
+| 시행 | 세부 계획에 따라 이행 | 전 부대 | 12. 1.부 |
+| 결과 | 결과 보고 및 환류 | ○○과 | 12. 15. |
+# 행정사항
+- 문의 : ○○과 (☎ 000-0000)
+- 본 지침 시행에 따라 기존 지침은 폐지
+* 이행 간 제한사항은 즉시 보고`},
+'긴급 지시문':{title:'○○ 사고 예방 긴급 조치 지시',keep:'1년',open:'대외비',to:'예하 전 부대 지휘관',due:'즉시(18:00까지)',cover:false,sum:'',
+body:`# 상황
+- ○○ 관련 사고가 발생하여 유사 사고 예방이 시급함
+-- 발생 일시 : 20xx. x. x.(요일) 00:00경
+-- 발생 장소 : ○○ 일대
+-- 피해 현황 : {빨강:인명 피해 0명}, 장비 피해 0건
+# 긴급 지시 사항
+- 전 부대 즉시 {빨강:○○ 활동 중지} 및 안전 점검 실시
+- 지휘관(자) 현장 확인 및 위험 요소 제거
+-- 취약 요소 식별 및 즉각 조치
+--- 조치 결과 사진·증빙 자료 유지
+- 사고 의심 상황 발생 시 즉시 상급 부대 보고
+# 보고
+| 구분 | 내용 | 보고 시한 | 보고처 |
+| 1차 | 조치 착수 보고 | 즉시 | 상황실 |
+| 2차 | 점검 결과 보고 | 당일 18:00 | 지휘통제실 |
+* 지시 불이행 시 책임 소재를 명확히 하여 조치할 예정`}};
+$('kind').addEventListener('change',()=>{const k=$('kind').value;if(!(k in KT)&&k!='보고서')return;
+if(!confirm(`「${k}」 기본 양식(예시 내용·표지 설정)으로 바꿀까요?\n[취소]를 누르면 문서 종류 이름만 바뀝니다. (Ctrl+Z로 되돌릴 수 있습니다)`))return;
+const t=k=='보고서'?TPL:Object.assign({},TPL,KT[k]);['title','keep','open','to','due','sum','body'].forEach(i=>$(i).value=t[i]??'');$('cover').checked=t.cover!==false;if(loaded)mod=today();render()});
 async function saveFile(){if(!await stamp())return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data())],{type:'application/json'}));a.download=($('title').value||'문서')+'.json';a.click()}
 $('f').onchange=e=>{if(e.target.files.length)fromFiles(e.target.files);e.target.value=''};
 window.addEventListener('paste',e=>{const f=[...e.clipboardData.files].filter(x=>x.type.startsWith('image/'));if(f.length){e.preventDefault();fromFiles(f)}});

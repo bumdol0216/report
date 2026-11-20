@@ -28,7 +28,7 @@ table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t the
 @media print{body{display:block;background:#fff}#ui{display:none}#wrap{padding:0;display:block}.page{box-shadow:none;margin:0;page-break-after:always}@page{size:A4;margin:0}.page:last-child{page-break-after:auto}}
 #m{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center}#m>div{background:#fff;padding:14px;border-radius:8px}canvas{border:1px solid #000;touch-action:none;background:#fff}
 .pr{display:flex;align-items:center;gap:4px;font-size:13px;margin-top:4px}.pr span{width:64px;font-weight:700}
-#pw0{position:relative;width:400px;max-width:100%;aspect-ratio:400/200;border:1px solid #000;background:#fff}#pw0 canvas{position:absolute;left:0;width:100%;border:0;background:transparent}#pad{top:0;height:70%}#tx{top:70%;height:30%;pointer-events:none}#dv{position:absolute;left:0;right:0;top:70%;border-top:2px dashed #888;pointer-events:none}#pw0 i{position:absolute;right:4px;font:11px sans-serif;color:#888;font-style:normal;pointer-events:none}
+#pw0{position:relative;width:400px;max-width:100%;aspect-ratio:400/160;border:1px solid #000;background:#fff}#pw0 canvas{position:absolute;left:0;width:100%;border:0;background:transparent}#pad{top:0;height:100%}#tx{top:70%;height:30%;pointer-events:none}#dv{position:absolute;left:0;right:0;top:70%;border-top:2px dashed #888;pointer-events:none}#pw0 i{position:absolute;right:4px;font:11px sans-serif;color:#888;font-style:normal;pointer-events:none}
 </style></head><body>
 <div id="ui">
 <h1>육군훈련소 보고서 양식툴</h1>
@@ -48,12 +48,11 @@ table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t the
 <div class="help" id="st">저장한 PNG나 수정용 파일(.json)을 불러오면 내용이 그대로 복원됩니다. 여러 개를 한꺼번에 선택하거나 끌어다 놓을 수 있습니다. 일반 사진·캡처·.txt는 본문만 읽어옵니다(오타 가능).</div>
 </div>
 <div id="wrap"><div id="doc"></div></div>
-<div id="m"><div><b>서명 / 결재</b> <span style="font-size:11px">(그림과 글씨를 한 칸에 함께 넣을 수 있습니다)</span>
-<div id="pw0"><canvas id="tx" width="400" height="60"></canvas><canvas id="pad" width="400" height="140"></canvas><div id="dv"></div><i style="top:2px">위: 그림</i><i style="top:71%">아래: 글씨</i></div>
+<div id="m"><div><b>서명 / 결재</b> <span style="font-size:11px">(위 칸: 서명 그림 / 아래 칸: 결재란 이름)</span>
+<div id="pw0"><canvas id="pad" width="400" height="160"></canvas></div>
 <div class="row" style="margin:4px 0"><select id="pc"><option value="#000">그림 검정</option><option value="#1a3fb0">그림 파랑</option><option value="#c00">그림 빨강</option></select><select id="pw"><option value="2">가는 펜</option><option value="4">보통 펜</option><option value="7">굵은 펜</option></select><select id="pe"><option value="0">펜</option><option value="1">지우개</option></select></div>
-<input id="pt" placeholder="키보드로 글씨 입력 (예: 홍길동)" oninput="drawTx()" style="margin:4px 0">
-<div class="row"><select id="tc" onchange="drawTx()"><option value="#000">글씨 검정</option><option value="#1a3fb0">글씨 파랑</option><option value="#c00">글씨 빨강</option></select></div>
-<button onclick="sg()">확인</button><button class="g" onclick="clr()">그림 지우기</button><button class="g" onclick="clrT()">글씨 지우기</button><button class="g" onclick="$('m').style.display='none'">취소</button></div></div>
+<label style="margin:2px 0">이름 (결재란의 이름 칸이 이 내용으로 바뀝니다)</label><input id="pt" placeholder="예: 김철수" style="margin:0 0 4px"><br>
+<button onclick="sg()">확인</button><button class="g" onclick="clr()">그림 지우기</button><button class="g" onclick="$('m').style.display='none'">취소</button></div></div>
 <script>
 const LOGO="logo.png",IDS=['kind','title','org','name','date','auto','no','keep','open','r0','r1','r2','n0','n1','n2','sum','body'];
 const $=i=>document.getElementById(i),esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
@@ -189,7 +188,7 @@ if(logo){files.push({n:'word/media/logo.png',d:logo});dr.push(['rIdL','image','m
 for(let i=0;i<3;i++)if(sigs[i]){files.push({n:`word/media/sig${i}.png`,d:Uint8Array.from(atob(sigs[i].split(',')[1]),c=>c.charCodeAt(0))});dr.push([`rIdS${i}`,'image',`media/sig${i}.png`]);sig[i]=1}
 const op=v('open')!='공개';
 const meta=TB([1500,2300],[['문서번호',v('no')||'미부여'],['보존기간',v('keep')],['작성일',dt],['최종수정일',mod||'-'],['공개구분',v('open')]].map(([a,b],i)=>({h:380,c:[{p:P(R(a,{z:19}),{j:'center',af:0}),shd:'EEEEEE'},{p:P(R(b,{z:19,c:i==4&&op?'CC0000':null,b:i==4&&op}),{j:'center',af:0})}]})));
-const ap=TB([1500,1500,1500],[{c:[0,1,2].map(i=>({p:P(R(v('r'+i),{z:19}),{j:'center',af:0}),shd:'EEEEEE'}))},{h:1300,c:[0,1,2].map(i=>({va:'bottom',p:(sig[i]?P(IMG(`rIdS${i}`,700000,350000,20+i),{j:'center',af:0}):'')+P(R(v('n'+i),{z:18}),{j:'center',af:0})}))}],{j:'right'});
+const ap=TB([1500,1500,1500],[{c:[0,1,2].map(i=>({p:P(R(v('r'+i),{z:19}),{j:'center',af:0}),shd:'EEEEEE'}))},{h:1300,c:[0,1,2].map(i=>({va:'bottom',p:(sig[i]?P(IMG(`rIdS${i}`,700000,280000,20+i),{j:'center',af:0}):'')+P(R(v('n'+i),{z:18}),{j:'center',af:0})}))}],{j:'right'});
 const layout=TB([5300,4506],[{c:[{p:meta+'<w:p/>',va:'top'},{p:ap+'<w:p/>',va:'top'}]}],{nb:1});
 const TB2='<w:top w:val="single" w:sz="36" w:space="14" w:color="0000FF"/><w:bottom w:val="single" w:sz="36" w:space="14" w:color="0000FF"/>';
 const PG='<w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="900" w:right="1050" w:bottom="1000" w:left="1050" w:header="400" w:footer="500" w:gutter="0"/>';
@@ -224,16 +223,13 @@ $('f').onchange=e=>{if(e.target.files.length)fromFiles(e.target.files);e.target.
 window.addEventListener('paste',e=>{const f=[...e.clipboardData.files].filter(x=>x.type.startsWith('image/'));if(f.length){e.preventDefault();fromFiles(f)}});
 window.addEventListener('dragover',e=>e.preventDefault());window.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer.files.length)fromFiles(e.dataTransfer.files)});
 const pad=$('pad'),g=pad.getContext('2d');let dr=false;g.lineCap='round';g.lineJoin='round';
-const pt=e=>{const r=pad.getBoundingClientRect();return[(e.clientX-r.left)*400/r.width,(e.clientY-r.top)*140/r.height]};
+const pt=e=>{const r=pad.getBoundingClientRect();return[(e.clientX-r.left)*400/r.width,(e.clientY-r.top)*160/r.height]};
 pad.onpointerdown=e=>{dr=true;pad.setPointerCapture(e.pointerId);const[x,y]=pt(e);g.beginPath();g.moveTo(x,y);g.lineTo(x+.1,y);const er=$('pe').value=='1';g.globalCompositeOperation=er?'destination-out':'source-over';g.strokeStyle=$('pc').value;g.lineWidth=er?16:+$('pw').value;g.stroke()};
 pad.onpointermove=e=>{if(dr){const[x,y]=pt(e);g.lineTo(x,y);g.stroke()}};window.onpointerup=()=>dr=false;
-function clr(){g.globalCompositeOperation='source-over';g.clearRect(0,0,400,140)}
-const tg=$('tx').getContext('2d'),FN="'Nanum Pen Script',cursive";
-async function drawTx(){await document.fonts.load("40px 'Nanum Pen Script'");tg.clearRect(0,0,400,60);const t=$('pt').value.trim();if(!t)return;let f=52;tg.font=f+'px '+FN;while(tg.measureText(t).width>380&&f>16){f-=3;tg.font=f+'px '+FN}tg.fillStyle=$('tc').value;tg.textAlign='center';tg.textBaseline='middle';tg.fillText(t,200,32)}
-function clrT(){$('pt').value='';tg.clearRect(0,0,400,60)}
-function done(d){sigs[cur]=d;if(loaded)mod=today();$('m').style.display='none';render()}
-function sg(){const c=document.createElement('canvas');c.width=400;c.height=200;const x=c.getContext('2d');x.drawImage(pad,0,0);x.drawImage($('tx'),0,140);done(x.getImageData(0,0,400,200).data.some(v=>v)?c.toDataURL():'')}
-$('doc').onclick=e=>{const t=e.target.closest('td[data-i]');if(t){cur=+t.dataset.i;clr();clrT();if(sigs[cur]){const im=new Image();im.onload=()=>{g.globalCompositeOperation='source-over';if(im.height==200){g.drawImage(im,0,0,400,140,0,0,400,140);tg.drawImage(im,0,140,400,60,0,0,400,60)}else g.drawImage(im,0,0,400,140)};im.src=sigs[cur]}$('m').style.display='flex'}};
+function clr(){g.globalCompositeOperation='source-over';g.clearRect(0,0,400,160)}
+function clrT(){$('pt').value=''}
+function sg(){sigs[cur]=g.getImageData(0,0,400,160).data.some(v=>v)?pad.toDataURL():'';$('n'+cur).value=$('pt').value.trim();if(loaded)mod=today();$('m').style.display='none';render()}
+$('doc').onclick=e=>{const t=e.target.closest('td[data-i]');if(t){cur=+t.dataset.i;clr();$('pt').value=$('n'+cur).value;if(sigs[cur]){const im=new Image();im.onload=()=>{g.globalCompositeOperation='source-over';g.drawImage(im,0,0,400,160)};im.src=sigs[cur]}$('m').style.display='flex'}};
 document.querySelectorAll('#ui input,#ui select,#ui textarea').forEach(x=>x.oninput=()=>{if(loaded)mod=today();render()});
 const s=localStorage.getItem('armyRpt');if(s)try{load(JSON.parse(s))}catch(e){render()}else render();
 document.fonts.ready.then(render);

@@ -59,7 +59,7 @@ table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t the
 <div class="help" id="st">저장한 PNG나 수정용 파일(.json)을 불러오면 내용이 그대로 복원됩니다. 여러 개를 한꺼번에 선택하거나 끌어다 놓을 수 있습니다. 일반 사진·캡처·.txt는 본문만 읽어옵니다(오타 가능).</div>
 </div>
 <div id="sbar"><b>서명 요청</b> <span id="sbi">불러오는 중...</span> <button id="sbs" onclick="startSign()">서명하기</button>
-<div id="sbr" style="display:none">서명이 완료되었습니다. 아래 서명 결과를 문서 작성자에게 전달하세요.<textarea id="sbl" readonly></textarea><button onclick="cp('sbl')">링크 복사</button><button onclick="saveSig()">파일로 저장</button></div></div>
+<div id="sbr" style="display:none">서명이 완료되었습니다. <span id="sbc">아래 링크를 문서 작성자에게 보내세요.</span><textarea id="sbl" readonly></textarea><button onclick="cp('sbl')">링크 복사</button><button onclick="saveSig()">파일로 저장</button></div></div>
 <div id="wrap"><div id="doc"></div></div>
 <div id="m"><div><b>서명 / 결재</b> <span style="font-size:11px">(위 칸: 서명 그림 / 아래 칸: 결재란 이름)</span>
 <div id="pw0"><canvas id="pad" width="400" height="160"></canvas></div>
@@ -329,21 +329,28 @@ function roleOpts(){[...$('sr').options].forEach((o,i)=>o.textContent=($('r'+i).
 async function verify(){if(signMode)return;const cur=await docHash(),out=[];for(let i=0;i<3;i++)if(sgh[i])out.push(`${esc($('r'+i).value)} 서명(${sgt[i]}): `+(sgh[i]===cur?'<b style="color:#080">일치</b> (서명 시점과 문서 내용 동일)':'<b style="color:#c00">불일치</b> (서명 후 내용이 바뀜, 서명 무효)'));$('vf').innerHTML='전자 서명 검증<br>'+(out.length?out.join('<br>'):'받은 서명 없음')+`<br><span style="color:#777">문서 지문 ${cur.slice(0,12)}</span>`}
 async function mkLink(){if(!await stamp())return;const r=+$('sr').value;if($('auto').value=='1'){$('date').value=iso();$('auto').value='0'}render();
 const d=data();d.sigs=await Promise.all(sigs.map(shrink));const h=await docHash(d),link=baseUrl()+'#sign='+await pack({v:1,r,h,d});
-$('lk').value=link;$('lk').style.display='block';$('lkb').style.display='inline-block';
-st(`「${$('r'+r).value}」 칸 서명 요청 링크를 만들었습니다. (${link.length.toLocaleString()}자) 서명을 기다리는 동안 문서 내용을 고치면 서명을 합칠 수 없습니다. 작성일은 오늘로 고정되었습니다.`+(link.length>8000?' 링크가 길어 메신저에서 잘릴 수 있으니 서명 그림을 줄이거나 다른 전달 수단을 쓰세요.':''))}
+$('lk').value=link;$('lk').style.display='block';$('lkb').style.display='inline-block';let cp0='';try{await navigator.clipboard.writeText(link);cp0='링크를 자동으로 복사했습니다. 카톡·메일에 붙여넣기(Ctrl+V) 하세요. '}catch(e){}
+st(cp0+`「${$('r'+r).value}」 칸 서명 요청 링크입니다. (${link.length.toLocaleString()}자) 작성일은 오늘로 고정됩니다.`+(link.length>8000?' 링크가 길어 메신저에서 잘릴 수 있으니 서명 그림을 줄이거나 다른 전달 수단을 쓰세요.':''))}
 async function enterSign(code){document.body.classList.add('sm');
 try{const o=await unpack(code);signRole=o.r;signHash=o.h;load(o.d,false);await document.fonts.ready;render();const cur=await docHash(),ok=cur===o.h;
 $('sbi').innerHTML=`서명할 칸: <b>${esc($('r'+signRole).value)}</b> · 문서 지문 ${cur.slice(0,12)} · `+(ok?'<span style="color:#9f9">문서 내용 정상</span> (본문은 수정할 수 없습니다)':'<span style="color:#f99">문서가 손상되었거나 변경되었습니다. 서명하지 마세요.</span>');$('sbs').style.display=ok?'inline-block':'none'}
 catch(e){$('sbi').innerHTML='<span style="color:#f99">서명 요청 링크를 읽지 못했습니다. 링크가 끝까지 복사되었는지 확인하세요.</span>';$('sbs').style.display='none'}}
 function startSign(){openPad(signRole)}
 async function finishSign(d,nm){$('m').style.display='none';if(!d){alert('서명 그림이 비어 있습니다. 그림을 그려 주세요.');return}
-sigs[signRole]=d;$('n'+signRole).value=nm;render();signOut={armysign:1,v:1,h:signHash,r:signRole,s:await shrink(d),n:nm,t:nowShort()};
-$('sbl').value=baseUrl()+'#signed='+await pack(signOut);$('sbr').style.display='block'}
+const t=nowShort();sigs[signRole]=d;$('n'+signRole).value=nm;sgh[signRole]=signHash;sgt[signRole]=t;render();
+const dd=data();dd.sigs=await Promise.all(sigs.map(shrink));signOut={armysign:1,v:2,h:signHash,r:signRole,t,d:dd};
+const link=baseUrl()+'#signed='+await pack(signOut);$('sbl').value=link;$('sbr').style.display='block';
+try{await navigator.clipboard.writeText(link);$('sbc').textContent='링크를 자동으로 복사했습니다. 작성자에게 붙여넣기(Ctrl+V)로 보내세요.'}catch(e){}}
 function saveSig(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(signOut)],{type:'application/json'}));a.download='서명완료_'+$('r'+signRole).value+'.json';a.click()}
 async function applySigned(o){if(!o||!o.armysign){st('올바른 서명 결과가 아닙니다.');return false}
-if(await docHash()!==o.h){alert('현재 문서의 내용이 서명 요청 때와 다릅니다. 서명을 적용하지 않았습니다.\n서명 요청을 보낼 때의 문서(저장한 PNG/.json)를 불러온 뒤 다시 적용해 주세요.');st('서명 적용 실패: 문서 내용이 서명 요청 때와 다릅니다.');return false}
-const r=o.r;if(sigs[r]&&!confirm(`「${$('r'+r).value}」 칸에 이미 서명이 있습니다. 받은 서명으로 바꿀까요?`))return false;
-sigs[r]=o.s;if(o.n)$('n'+r).value=o.n;sgh[r]=o.h;sgt[r]=o.t||'';if(loaded)mod=today();render();st(`「${$('r'+r).value}」 칸 서명을 적용했습니다. 문서 내용이 서명 요청 때와 일치합니다.`);return true}
+const r=o.r,nm=$('r'+r).value,cur=await docHash();
+if(o.d){
+ if(cur===o.h){if(sigs[r]&&!confirm(`「${nm}」 칸에 이미 서명이 있습니다. 받은 서명으로 바꿀까요?`))return false;
+  sigs[r]=o.d.sigs[r];$('n'+r).value=o.d['n'+r]||$('n'+r).value;sgh[r]=o.h;sgt[r]=o.t||'';if(loaded)mod=today();render();st(`「${nm}」 칸 서명을 적용했습니다. 문서 내용이 서명 요청 때와 일치합니다.`);return true}
+ if(!confirm('이 서명은 서명 요청을 보낼 때의 문서에 받은 것입니다.\n서명받은 문서로 바꿔 불러올까요?\n(지금 문서는 Ctrl+Z로 되돌릴 수 있습니다)'))return false;
+ clearTimeout(hT);pushH();load(o.d,true);st(`서명받은 문서를 불러왔습니다. 「${nm}」 칸 서명이 들어 있고, 서명 요청 때의 내용과 일치합니다.`);return true}
+if(cur!==o.h&&!confirm('현재 문서의 내용이 서명 요청 때와 다릅니다.\n그래도 서명만 적용할까요? (검증에는 "불일치"로 표시됩니다)'))return false;
+sigs[r]=o.s;if(o.n)$('n'+r).value=o.n;sgh[r]=o.h;sgt[r]=o.t||'';if(loaded)mod=today();render();st(`「${nm}」 칸 서명을 적용했습니다.`);return true}
 async function applySignedCode(c){try{await applySigned(await unpack(c))}catch(e){st('서명 결과를 읽지 못했습니다. 링크가 끝까지 복사되었는지 확인하세요.')}}
 function pasteSigned(){let t=$('rp').value.trim();const i=t.indexOf('#signed=');if(i>=0)t=t.slice(i+8);if(!t)return;applySignedCode(t).then(()=>{$('rp').value=''})}
 async function saveFile(){if(!await stamp())return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data())],{type:'application/json'}));a.download=($('title').value||'문서')+'.json';a.click()}

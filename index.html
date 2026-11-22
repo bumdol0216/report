@@ -54,7 +54,7 @@ table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t the
 <div class="help"><b>쓰는 법</b> (줄 맨 앞에 기호)<br>글씨색: 글씨를 드래그한 뒤 위 색 버튼 → {빨강:글씨}<br># 대제목 → 1. 2. 자동번호<br>- 항목 → □ &nbsp;&nbsp; -- → ◦ &nbsp;&nbsp; --- → ∙ &nbsp;&nbsp; * → ※<br>| 칸1 | 칸2 | → 표 (첫 줄은 제목줄)</div>
 <label>서명 받기 (링크로 전달)</label>
 <div class="row"><select id="sr"><option value="0">1</option><option value="1">2</option><option value="2">3</option></select><button onclick="mkLink()" style="flex:2">서명 요청 링크 만들기</button></div>
-<label><input type="checkbox" id="shl" checked style="width:auto"> 짧은 링크로 줄이기 (공개 문서만 · is.gd 이용)</label>
+<label><input type="checkbox" id="shl" style="width:auto"> 짧은 링크로 줄이기 (공개 문서만 · is.gd 이용, 켜면 몇 초 더 걸림)</label>
 <textarea id="lk" readonly style="height:70px;display:none;font-size:11px"></textarea><button class="g" id="lkb" style="display:none" onclick="cp('lk')">링크 복사</button><button class="g" id="rqf" style="display:none" onclick="saveReq()">요청 파일 저장</button>
 <label>받은 서명 결과 적용</label><div class="row"><input id="rp" placeholder="서명 결과 링크 붙여넣기"><button onclick="pasteSigned()" style="flex:none">적용</button></div>
 <div class="help" id="vf">전자 서명 검증: 받은 서명 없음</div>
@@ -363,7 +363,7 @@ window[f]=d=>end(d&&d.shorturl||null);sc.onerror=()=>end(null);sc.src='https://i
 async function finalLink(link,want,open){if(!want)return{u:link,n:''};if(open!='공개')return{u:link,n:'대외비·비공개 문서는 외부 단축 서비스를 쓰지 않고 긴 링크로 만들었습니다. '};const sh=await shortUrl(link);return sh?{u:sh,n:'짧은 링크로 줄였습니다. '}:{u:link,n:'링크 단축에 실패해 긴 링크로 만들었습니다. '}}
 const LIM=1900;let lastReq=null;
 let lkTok=0;
-async function mkLink(){if(!await stamp(false))return;const tok=++lkTok,r=+$('sr').value;if($('auto').value=='1'){$('date').value=iso();$('auto').value='0'}render();
+async function mkLink(){const tok=++lkTok,r=+$('sr').value;if($('auto').value=='1'){$('date').value=iso();$('auto').value='0'}render();
 const full=data(),h=await docHash(full);try{const P=JSON.parse(localStorage.getItem('armyPending')||'{}');delete P[h];P[h]=full;Object.keys(P).slice(0,-5).forEach(k=>delete P[k]);localStorage.setItem('armyPending',JSON.stringify(P))}catch(e){}
 const cs=await Promise.all(sigs.map(x=>sigEnc(x)));
 const build=async(ws)=>{const d=Object.assign({},full);d.cs=ws?cs:['','',''];d.sigs=['','',''];delete d.mod;lastReq={v:3,r,h,sh:$('shl').checked?1:0,d};return baseUrl()+'#sign='+await pack(lastReq)};

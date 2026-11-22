@@ -147,7 +147,7 @@ if(ty=='tEXt'){let s='';for(let j=i+8;j<i+8+n;j++)s+=String.fromCharCode(u[j]);i
 async function shot(i){const D=$('doc'),el=D.querySelectorAll('.page')[i];D.classList.add('cap');const c=await html2canvas(el,{scale:2,useCORS:true});D.classList.remove('cap');
 const b=await new Promise(r=>c.toBlob(r));return new Blob([embed(new Uint8Array(await b.arrayBuffer()),JSON.stringify(data()))],{type:'image/png'})}
 function dl(b,i){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=($('title').value||'문서')+'_'+LB[i]+'.png';a.click()}
-async function stamp(){try{const r=await fetch(API),j=await r.json();if(typeof j.value!='number')throw 0;$('no').value=String(j.value).padStart(6,'0');render();await new Promise(r=>setTimeout(r,150));return true}catch(e){alert('문서번호 서버에 연결하지 못해 내보내기를 중단했습니다. 인터넷 연결을 확인하고 다시 시도하세요.');return false}}
+async function stamp(force=true){if(!force&&$('no').value)return true;try{const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),5000),r=await fetch(API,{signal:ac.signal});clearTimeout(tm);const j=await r.json();if(typeof j.value!='number')throw 0;$('no').value=String(j.value).padStart(6,'0');render();return true}catch(e){alert('문서번호 서버에 연결하지 못해 내보내기를 중단했습니다. 인터넷 연결을 확인하고 다시 시도하세요.');return false}}
 async function doPrint(){if(await stamp())window.print()}
 async function cap(mode,i){if(!await stamp())return;if(mode=='png'){dl(await shot(i),i);return}
 try{await navigator.clipboard.write([new ClipboardItem({'image/png':shot(i)})]);alert(LB[i]+(LB[i]=='표지'?'':'쪽')+' 복사 완료! 붙여넣기(Ctrl+V) 하세요.')}catch(e){alert('이 브라우저는 복사를 지원하지 않습니다. 저장 버튼을 이용하세요.')}}
@@ -358,11 +358,23 @@ return(window.CompressionStream?'Z':'R')+b2s(await zr(u))}
 async function sigDec(t){if(!t)return'';const old=t[0]=='z'||t[0]=='r';let u=s2b(t.slice(1));if(t[0]=='z'||t[0]=='Z')u=await ur(u);const hd=old?3:5,W=old?200:u[0]*2,H=old?80:u[1]*2,co=old?0:2,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d'),im=x.createImageData(W,H);
 for(let i=0;i<W*H;i++)if(u[hd+(i>>3)]>>(i&7)&1){im.data[i*4]=u[co];im.data[i*4+1]=u[co+1];im.data[i*4+2]=u[co+2];im.data[i*4+3]=255}
 x.putImageData(im,0,0);return c.toDataURL()}
-function shortUrl(u){return new Promise(res=>{const f='__is'+Date.now(),sc=document.createElement('script');let done=false;const end=v=>{if(done)return;done=true;clearTimeout(t);delete window[f];sc.remove();res(v)},t=setTimeout(()=>end(null),7000);
+function shortUrl(u){return new Promise(res=>{const f='__is'+Date.now(),sc=document.createElement('script');let done=false;const end=v=>{if(done)return;done=true;clearTimeout(t);delete window[f];sc.remove();res(v)},t=setTimeout(()=>end(null),4000);
 window[f]=d=>end(d&&d.shorturl||null);sc.onerror=()=>end(null);sc.src='https://is.gd/create.php?format=json&callback='+f+'&url='+encodeURIComponent(u);document.head.appendChild(sc)})}
 async function finalLink(link,want,open){if(!want)return{u:link,n:''};if(open!='공개')return{u:link,n:'대외비·비공개 문서는 외부 단축 서비스를 쓰지 않고 긴 링크로 만들었습니다. '};const sh=await shortUrl(link);return sh?{u:sh,n:'짧은 링크로 줄였습니다. '}:{u:link,n:'링크 단축에 실패해 긴 링크로 만들었습니다. '}}
 const LIM=1900;let lastReq=null;
-async function mkLink(){if(!await stamp())return;const r=+$('sr').value;if($('auto').value=='1'){$('date').value=iso();$('auto').value='0'}render();
+let lkTok=0;
+async function mkLink(){if(!await stamp(false))return;const tok=++lkTok,r=+$('sr').value;if($('auto').value=='1'){$('date').value=iso();$('auto').value='0'}render();
+const full=data(),h=await docHash(full);try{const P=JSON.parse(localStorage.getItem('armyPending')||'{}');delete P[h];P[h]=full;Object.keys(P).slice(0,-5).forEach(k=>delete P[k]);localStorage.setItem('armyPending',JSON.stringify(P))}catch(e){}
+const cs=await Promise.all(sigs.map(x=>sigEnc(x)));
+const build=async(ws)=>{const d=Object.assign({},full);d.cs=ws?cs:['','',''];d.sigs=['','',''];delete d.mod;lastReq={v:3,r,h,sh:$('shl').checked?1:0,d};return baseUrl()+'#sign='+await pack(lastReq)};
+let long=await build(true),extra='';
+if(long.length>LIM&&cs.some(x=>x)){const l2=await build(false);if(l2.length<long.length){long=l2;extra='링크가 길어 이전 서명 그림은 빼고 만들었습니다. '}else long=await build(true)}
+const want=$('shl').checked&&$('open').value=='공개',canShort=want;
+if(long.length>LIM&&!want)extra+='링크가 길어 메신저에서 파일로 바뀔 수 있습니다. 「요청 파일 저장」으로 파일을 보내세요. ';
+const show=async(u,msg)=>{$('lk').value=u;$('lk').style.display='block';$('lkb').style.display='inline-block';$('rqf').style.display='inline-block';let c='';try{await navigator.clipboard.writeText(u);c='링크를 자동으로 복사했습니다. 카톡·메일에 붙여넣기(Ctrl+V) 하세요. '}catch(e){}st(msg+extra+c+`「${$('r'+r).value}」 칸 서명 요청 링크입니다. (${u.length.toLocaleString()}자) 작성일은 오늘로 고정됩니다.`)};
+await show(long,canShort?'바로 쓸 수 있는 링크를 먼저 만들었습니다. 짧은 링크로 줄이는 중입니다... ':($('shl').checked&&$('open').value!='공개'?'대외비·비공개 문서는 외부 단축 서비스를 쓰지 않고 긴 링크로 만들었습니다. ':''));
+if(canShort){const sh=await shortUrl(long);if(tok!==lkTok)return;if(sh){await show(sh,'짧은 링크로 줄였습니다. ')}else{extra+='링크 단축에 실패해 긴 링크를 그대로 사용합니다. ';await show(long,'')}}}
+async function mkLinkOld(){if(!await stamp())return;const r=+$('sr').value;if($('auto').value=='1'){$('date').value=iso();$('auto').value='0'}render();
 const full=data(),h=await docHash(full);try{const P=JSON.parse(localStorage.getItem('armyPending')||'{}');delete P[h];P[h]=full;Object.keys(P).slice(0,-5).forEach(k=>delete P[k]);localStorage.setItem('armyPending',JSON.stringify(P))}catch(e){}
 const cs=await Promise.all(sigs.map(x=>sigEnc(x)));
 const build=async(ws)=>{const d=Object.assign({},full);d.cs=ws?cs:['','',''];d.sigs=['','',''];delete d.mod;lastReq={v:3,r,h,sh:$('shl').checked?1:0,d};return baseUrl()+'#sign='+await pack(lastReq)};
@@ -381,7 +393,8 @@ async function finishSign(d,nm){if($('kind').value=='의향서'){if(!$('as').val
 const t=nowShort();sigs[signRole]=d;$('n'+signRole).value=nm;sgh[signRole]=signHash;sgt[signRole]=t;render();
 signOut={armysign:1,v:3,h:signHash,r:signRole,t,n:nm};if($('kind').value=='의향서'){signOut.a=$('ans').value;signOut.c=$('cmt').value}
 $('sbl').value='링크를 만드는 중...';$('sbr').style.display='block';let long,f;
-for(const[W,H]of[[200,80],[150,60],[100,40]]){signOut.s=await sigEnc(d,W,H);long=baseUrl()+'#signed='+await pack(signOut);f=await finalLink(long,signSh,$('open').value);if(f.u!==long||long.length<=LIM)break}$('sbl').value=f.u;
+for(const[W,H]of[[200,80],[150,60],[100,40]]){signOut.s=await sigEnc(d,W,H);long=baseUrl()+'#signed='+await pack(signOut);if(long.length<=LIM)break}f={u:long,n:''};$('sbl').value=long;
+if(signSh&&$('open').value=='공개')shortUrl(long).then(sh=>{if(sh&&$('sbl').value===long){$('sbl').value=sh;try{navigator.clipboard.writeText(sh)}catch(e){}$('sbc').textContent='짧은 링크로 줄였습니다. 링크를 복사해 작성자에게 보내세요.'}});
 let msg=f.n+(f.u===long&&long.length>LIM?'링크가 길어 메신저에서 파일로 바뀔 수 있습니다. 「파일로 저장」으로 파일을 보내세요.':'아래 링크를 문서 작성자에게 보내세요.');try{await navigator.clipboard.writeText(f.u);msg=msg.replace('아래 링크를 문서 작성자에게 보내세요.','링크를 자동으로 복사했습니다. 작성자에게 붙여넣기(Ctrl+V)로 보내세요.')}catch(e){}$('sbc').textContent=msg}
 function saveSig(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(signOut)],{type:'application/json'}));a.download='서명완료_'+$('r'+signRole).value+'.json';a.click()}
 async function applySigned(o){if(!o||!o.armysign){st('올바른 서명 결과가 아닙니다.');return false}

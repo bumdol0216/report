@@ -32,16 +32,18 @@ table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t the
 .cb{padding:3px 6px;font-size:11px;margin:1px}
 .urgent{display:inline-block;border:3px solid #d00000;color:#d00000;font:900 26px 'Noto Sans KR';letter-spacing:.3em;padding:2px 14px 2px 22px;margin-bottom:12px}.urg .h1{color:#d00000}.urg .h1 b{border-color:#d00000;box-shadow:2px 2px 0 #d00000;color:#d00000}.urg .ct,.urg .title{border-top-color:#d00000;border-bottom-color:#d00000}
 #sbar{display:none;position:fixed;top:0;left:0;right:0;z-index:5;background:#1f3a1f;color:#fff;padding:8px 14px;font-size:13px}.sm #sbar{display:block}.sm #ui{display:none}.sm #wrap{padding-top:200px}#sbl{height:46px;margin-top:4px;font-size:11px}#sbar button{background:#fff;color:#1f3a1f;font-weight:700}
+.ans{border:1.5px solid #000;padding:10px 14px;margin:16px 0;line-height:1.9;font-size:14.5px}
 </style></head><body>
 <div id="ui">
 <h1>육군훈련소 보고서 양식툴</h1>
 <button class="g" onclick="undo()">되돌리기 (Ctrl+Z)</button><button class="g" onclick="redo()">다시 실행 (Ctrl+Y)</button>
-<label>문서 종류</label><select id="kind"><option>보고서</option><option>계획서</option><option>제안서</option><option>검토서</option><option>시행 지침서</option><option>긴급 지시문</option><option>시말서</option></select>
+<label>문서 종류</label><select id="kind"><option>보고서</option><option>계획서</option><option>제안서</option><option>검토서</option><option>시행 지침서</option><option>긴급 지시문</option><option>시말서</option><option>의향서</option></select>
 <label>제목</label><input id="title" value="2027년 ○○ 훈련 계획">
 <div class="row"><div><label>소속</label><input id="org" value="육군훈련소"></div><div><label>작성자 계급·이름</label><input id="name" value="중위 홍길동"></div></div>
 <div class="row"><div><label>작성일</label><input id="date" type="date"></div><div><label>자동 날짜</label><select id="auto"><option value="1">오늘로 자동</option><option value="0">직접 지정</option></select></div></div>
 <div class="row"><div><label>문서번호 (자동)</label><input id="no" readonly placeholder="내보낼 때 자동"></div><div><label>보존기간</label><input id="keep" value="1년"></div><div><label>공개구분</label><select id="open"><option>공개</option><option>대외비</option><option>비공개</option></select></div></div>
 <div class="row"><div><label>수신(배부처)</label><input id="to" placeholder="비우면 표시 안 함"></div><div><label id="duel">시행일 / 조치기한</label><input id="due" placeholder="비우면 표시 안 함"></div></div>
+<div id="ansp" style="display:none"><label>회신 의향 (의향서)</label><div class="row"><select id="ans"><option value="">(미회신)</option><option>희망함</option><option>희망하지 않음</option><option>검토 후 회신</option></select><input id="cmt" placeholder="회신 의견(선택)"></div></div>
 <label><input type="checkbox" id="cover" checked style="width:auto"> 표지(로고) 포함</label>
 <label>결재란 (직책 ↔ 문서의 칸을 누르면 서명)</label>
 <div class="row"><input id="r0" value="작성"><input id="r1" value="검토"><input id="r2" value="결재"></div>
@@ -64,10 +66,11 @@ table.t{border-collapse:collapse;width:100%;margin:8px 0;font-size:13.5px}.t the
 <div id="m"><div><b>서명 / 결재</b> <span style="font-size:11px">(위 칸: 서명 그림 / 아래 칸: 결재란 이름)</span>
 <div id="pw0"><canvas id="pad" width="400" height="160"></canvas></div>
 <div class="row" style="margin:4px 0"><select id="pc"><option value="#000">그림 검정</option><option value="#1a3fb0">그림 파랑</option><option value="#c00">그림 빨강</option></select><select id="pw"><option value="2">가는 펜</option><option value="4">보통 펜</option><option value="7">굵은 펜</option></select><select id="pe"><option value="0">펜</option><option value="1">지우개</option></select></div>
+<div id="answ" style="display:none"><label style="margin:2px 0">회신 의향 (선택해 주세요)</label><div class="row"><select id="as"><option value="">선택</option><option>희망함</option><option>희망하지 않음</option><option>검토 후 회신</option></select><input id="ac" placeholder="의견(선택)"></div></div>
 <label style="margin:2px 0">이름 (결재란의 이름 칸이 이 내용으로 바뀝니다)</label><input id="pt" placeholder="예: 김철수" style="margin:0 0 4px"><br>
 <button onclick="sg()">확인</button><button class="g" onclick="clr()">그림 지우기</button><button class="g" onclick="$('m').style.display='none'">취소</button></div></div>
 <script>
-const LOGO="logo.png",IDS=['to','due','kind','title','org','name','date','auto','no','keep','open','r0','r1','r2','n0','n1','n2','sum','body'];
+const LOGO="logo.png",IDS=['ans','cmt','to','due','kind','title','org','name','date','auto','no','keep','open','r0','r1','r2','n0','n1','n2','sum','body'];
 const $=i=>document.getElementById(i),esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 let sigs=['','',''],cur=0,LB=[],mod='',loaded=false,signMode=false,signRole=0,signHash='',signOut=null,sgh=['','',''],sgt=['','',''];
 const API='https://abacus.jasoncameron.dev/hit/armytc-report-tool/export';
@@ -93,7 +96,7 @@ const SAMPLE=`# 개요
 - 훈련 간 건의사항은 작성자에게 보고
 - 결과 보고 : 훈련 종료 후 서면 보고
 * 승인해 주시면 내실 있게 추진하겠습니다.`;
-const TPL={kind:'보고서',title:'2027년 ○○ 훈련 계획',org:'육군훈련소',name:'중위 홍길동',date:'',auto:'1',no:'',keep:'1년',open:'공개',to:'',due:'',r0:'작성',r1:'검토',r2:'결재',n0:'홍길동',n1:'김철수',n2:'이순신',sum:'◦ 신병 교육훈련 계획 보고임.\n  ·기간 : 11. 20.(금) ~ 11. 21.(토) / 2일\n  ·대상 : 신병 교육 대상자\n※ 승인해 주시면 내실 있게 추진하겠습니다.',body:SAMPLE};
+const TPL={kind:'보고서',title:'2027년 ○○ 훈련 계획',org:'육군훈련소',name:'중위 홍길동',date:'',auto:'1',no:'',keep:'1년',open:'공개',to:'',due:'',ans:'',cmt:'',r0:'작성',r1:'검토',r2:'결재',n0:'홍길동',n1:'김철수',n2:'이순신',sum:'◦ 신병 교육훈련 계획 보고임.\n  ·기간 : 11. 20.(금) ~ 11. 21.(토) / 2일\n  ·대상 : 신병 교육 대상자\n※ 승인해 주시면 내실 있게 추진하겠습니다.',body:SAMPLE};
 function applyTpl(blank){IDS.forEach(i=>$(i).value=TPL[i]);if(blank){['title','name','n0','n1','n2','sum','body'].forEach(i=>$(i).value='')}$('cover').checked=true;sigs=['','',''];sgh=['','',''];sgt=['','',''];mod='';loaded=false}
 applyTpl(false);
 function today(){const d=new Date(),w='일월화수목금토'[d.getDay()];return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}.(${w})`}
@@ -110,7 +113,7 @@ else if(m=l.match(/^-\s*(.*)/))B.push(`<p class=l1>□ ${inl(m[1])}</p>`);
 else if(m=l.match(/^\*\s*(.*)/))B.push(`<p class=nt>※ ${inl(m[1])}</p>`);
 else B.push(`<p>${inl(l)}</p>`)}fl();return B}
 const H=h=>{const d=document.createElement('div');d.innerHTML=h;return d.firstElementChild};
-function render(){const v=i=>$(i).value,dt=v('auto')=='1'?today():fmt(v('date')),k=v('kind'),D=$('doc');D.innerHTML='';const urg=k=='긴급 지시문';D.classList.toggle('urg',urg);const extra=(v('to')?`<tr><th>${k=='시말서'?'제출처':'수신'}</th><td>${esc(v('to'))}</td></tr>`:'')+(v('due')?`<tr><th>${urg?'조치기한':'시행일'}</th><td>${esc(v('due'))}</td></tr>`:'');
+function render(){const v=i=>$(i).value,dt=v('auto')=='1'?today():fmt(v('date')),k=v('kind'),D=$('doc');D.innerHTML='';const urg=k=='긴급 지시문';D.classList.toggle('urg',urg);$('ansp').style.display=k=='의향서'?'block':'none';const extra=(v('to')?`<tr><th>${k=='시말서'?'제출처':'수신'}</th><td>${esc(v('to'))}</td></tr>`:'')+(v('due')?`<tr><th>${urg?'조치기한':k=='의향서'?'회신기한':'시행일'}</th><td>${esc(v('due'))}</td></tr>`:'');
 const ap=[0,1,2].map(i=>`<td data-i=${i}>${sigs[i]?`<img src="${sigs[i]}">`:''}${esc(v('n'+i))}${sgt[i]?`<div style="font-size:9px;color:#555">${sgt[i]}</div>`:''}</td>`).join('');
 const hd=`<div>${urg?'<div class=urgent>긴 급</div>':''}<div class=top><table class="meta v"><tr><th>문서번호</th><td>${esc(v('no'))||'미부여'}</td></tr><tr><th>보존기간</th><td>${esc(v('keep'))}</td></tr><tr><th>작성일</th><td>${dt}</td></tr><tr><th>최종수정일</th><td>${mod||'-'}</td></tr><tr><th>공개구분</th><td class="${v('open')!='공개'?'rd':''}">${v('open')}</td></tr>${extra}</table><table class=ap><tr>${[0,1,2].map(i=>`<th>${esc(v('r'+i))}</th>`).join('')}</tr><tr>${ap}</tr></table></div></div>`;
 const cv=$('cover').checked;
@@ -125,6 +128,7 @@ for(const b of parse(v('body'))){
  const[head,...rows]=b.t;let t=mt(head);pc.appendChild(t);if(over()){pc.removeChild(t);mk();pc.appendChild(t)}
  for(const r of rows){const tr=H('<table><tr>'+r.map(c=>`<td>${inl(c)}</td>`).join('')+'</tr></table>').querySelector('tr');t.tBodies[0].appendChild(tr);
   if(over()){t.tBodies[0].removeChild(tr);if(!t.tBodies[0].children.length)pc.removeChild(t);mk();t=mt(head);pc.appendChild(t);t.tBodies[0].appendChild(tr)}}}
+if(k=='의향서')add(H(`<div class=ans><b>회신 의향</b><br>${['희망함','희망하지 않음','검토 후 회신'].map(a=>(v('ans')==a?'■ ':'□ ')+a).join('&nbsp;&nbsp;&nbsp;&nbsp;')}<br>의견 : ${esc(v('cmt'))||'&nbsp;'}</div>`));
 add(H(`<div><div class=by>${dt}${mod?`<br><span style="font-weight:400;font-size:13px">(최종 수정 ${mod})</span>`:''}<br>${esc(v('org'))} ${esc(v('name'))}</div><div class=end>// 끝 //</div></div>`));
 const ps=[...D.querySelectorAll('.page:not(.cover)')];ps.forEach((p,i)=>p.appendChild(H(`<div class=pn>${ps.length}-${i+1}</div>`)));
 LB=[...(D.querySelector('.cover')?['표지']:[]),...ps.map((_,i)=>`${ps.length}-${i+1}`)];
@@ -206,7 +210,7 @@ const files=[],dr=[['rId1','header','header1.xml'],['rId2','footer','footer1.xml
 if(logo){files.push({n:'word/media/logo.png',d:logo});dr.push(['rIdL','image','media/logo.png'])}
 for(let i=0;i<3;i++)if(sigs[i]){files.push({n:`word/media/sig${i}.png`,d:Uint8Array.from(atob(sigs[i].split(',')[1]),c=>c.charCodeAt(0))});dr.push([`rIdS${i}`,'image',`media/sig${i}.png`]);sig[i]=1}
 const op=v('open')!='공개',urg=k=='긴급 지시문',BC=urg?'D00000':'0000FF';
-const meta=TB([1500,2300],[['문서번호',v('no')||'미부여'],['보존기간',v('keep')],['작성일',dt],['최종수정일',mod||'-'],['공개구분',v('open')],...(v('to')?[[k=='시말서'?'제출처':'수신',v('to')]]:[]),...(v('due')?[[urg?'조치기한':'시행일',v('due')]]:[])].map(([a,b],i)=>({h:380,c:[{p:P(R(a,{z:19}),{j:'center',af:0}),shd:'EEEEEE'},{p:P(R(b,{z:19,c:a=='공개구분'&&op?'CC0000':null,b:a=='공개구분'&&op}),{j:'center',af:0})}]})));
+const meta=TB([1500,2300],[['문서번호',v('no')||'미부여'],['보존기간',v('keep')],['작성일',dt],['최종수정일',mod||'-'],['공개구분',v('open')],...(v('to')?[[k=='시말서'?'제출처':'수신',v('to')]]:[]),...(v('due')?[[urg?'조치기한':k=='의향서'?'회신기한':'시행일',v('due')]]:[])].map(([a,b],i)=>({h:380,c:[{p:P(R(a,{z:19}),{j:'center',af:0}),shd:'EEEEEE'},{p:P(R(b,{z:19,c:a=='공개구분'&&op?'CC0000':null,b:a=='공개구분'&&op}),{j:'center',af:0})}]})));
 const ap=TB([1500,1500,1500],[{c:[0,1,2].map(i=>({p:P(R(v('r'+i),{z:19}),{j:'center',af:0}),shd:'EEEEEE'}))},{h:1300,c:[0,1,2].map(i=>({va:'bottom',p:(sig[i]?P(IMG(`rIdS${i}`,700000,280000,20+i),{j:'center',af:0}):'')+P(R(v('n'+i),{z:18}),{j:'center',af:0})+(sgt[i]?P(R(sgt[i],{z:14}),{j:'center',af:0}):'')}))}],{j:'right'});
 const stamp=urg?TB([2400],[{c:[{p:P(R('긴  급',{f:HF,b:1,c:'D00000',z:44,sp:60}),{j:'center',af:0})}]}],{bc:'D00000'})+P('',{af:80}):'';
 const layout=TB([5300,4506],[{c:[{p:meta+'<w:p/>',va:'top'},{p:ap+'<w:p/>',va:'top'}]}],{nb:1});
@@ -224,6 +228,7 @@ else if(b.k=='l3')body.push(P(RS('∙ '+b.t),{l:700,h:230}));
 else if(b.k=='nt')body.push(P(RS('※ '+b.t,{z:21}),{l:560,h:300}));
 else if(b.k=='p')body.push(P(RS(b.t)));
 else{const n=Math.max(...b.rows.map(r=>r.length)),ws=Array(n).fill(Math.floor(W/n));body.push(TB(ws,b.rows.map((r,ri)=>({hd:ri==0,c:Array.from({length:n},(_,i)=>({p:P(RS(r[i]||'',{z:22,b:ri==0}),{j:'center',af:0}),shd:ri==0?'E6ECFF':null}))})))+P('',{af:0}))}}
+if(k=='의향서')body.push(P('',{af:60}),TB([9806],[{c:[{va:'top',p:P(R('회신 의향',{b:1}))+P(R(['희망함','희망하지 않음','검토 후 회신'].map(a=>(v('ans')==a?'■ ':'□ ')+a).join('    ')))+P(RS('의견 : '+v('cmt')))}]}]),P('',{af:0}));
 body.push(P(R(dt,{b:1}),{j:'right',b4:500,af:0}));if(mod)body.push(P(R('(최종 수정 '+mod+')',{z:20}),{j:'right',af:0}));
 body.push(P(R(v('org')+' '+v('name'),{b:1}),{j:'right',af:0}),P(R('// 끝 //'),{j:'center',b4:500}));
 const sect=`<w:sectPr><w:headerReference w:type="default" r:id="rId1"/><w:footerReference w:type="default" r:id="rId2"/><w:type w:val="nextPage"/>${PG}<w:pgNumType w:start="1"/></w:sectPr>`;
@@ -295,6 +300,20 @@ body:`# 인적 사항
 - 이번 일을 깊이 반성하며 규정을 철저히 준수하겠음
 -- 동일 사례 재발 시 어떠한 처벌도 감수하겠음
 위와 같이 사실과 다름없이 작성하여 시말서를 제출합니다.`},
+'의향서':{title:'○○ 참여 의향서',keep:'1년',open:'공개',to:'○○부서장 귀하',due:'20xx. x. x.(요일)까지',cover:false,sum:'',r0:'작성(질의)',r1:'회신자',r2:'확인',
+body:`# 목적
+- ○○ 추진에 앞서 귀 부서(귀하)의 참여 의향을 확인하고자 함
+# 추진 개요
+- 일 시 : 20xx. x. x.(요일) 00:00 ~ 00:00
+- 장소·대상 : ○○ 일대, ○○ 인원(00명)
+# 의향 확인 사항
+| 구분 | 확인 내용 | 비고 |
+| 참여 의향 | 참여 가능 여부 | 아래 「회신 의향」에 표시 |
+| 참여 인원 | 00명 | 변동 시 즉시 통보 |
+# 회신 방법
+- 회신 기한 : 상단 표의 기한까지
+- 회신 방법 : 서명 요청 링크 또는 서면 회신
+위와 같이 귀하의 의향을 문의하오니 회신하여 주시기 바랍니다.`},
 '긴급 지시문':{title:'○○ 사고 예방 긴급 조치 지시',keep:'1년',open:'대외비',to:'예하 전 부대 지휘관',due:'즉시(18:00까지)',cover:false,sum:'',
 body:`# 상황
 - ○○ 관련 사고가 발생하여 유사 사고 예방이 시급함
@@ -314,7 +333,7 @@ body:`# 상황
 * 지시 불이행 시 책임 소재를 명확히 하여 조치할 예정`}};
 $('kind').addEventListener('change',()=>{const k=$('kind').value;if(!(k in KT)&&k!='보고서')return;
 if(!confirm(`「${k}」 기본 양식(예시 내용·표지 설정)으로 바꿀까요?\n[취소]를 누르면 문서 종류 이름만 바뀝니다. (Ctrl+Z로 되돌릴 수 있습니다)`))return;
-const t=k=='보고서'?TPL:Object.assign({},TPL,KT[k]);['title','keep','open','to','due','sum','r0','r1','r2','body'].forEach(i=>$(i).value=t[i]??'');$('cover').checked=t.cover!==false;if(loaded)mod=today();render()});
+const t=k=='보고서'?TPL:Object.assign({},TPL,KT[k]);['title','keep','open','to','due','ans','cmt','sum','r0','r1','r2','body'].forEach(i=>$(i).value=t[i]??'');$('cover').checked=t.cover!==false;if(k=='의향서')$('sr').value='1';if(loaded)mod=today();render()});
 
 const b2s=u=>{let t='';for(let i=0;i<u.length;i+=8192)t+=String.fromCharCode(...u.subarray(i,i+8192));return btoa(t).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
 const s2b=t=>{t=t.replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';return Uint8Array.from(atob(t),c=>c.charCodeAt(0))};
@@ -336,7 +355,7 @@ try{const o=await unpack(code);signRole=o.r;signHash=o.h;load(o.d,false);await d
 $('sbi').innerHTML=`서명할 칸: <b>${esc($('r'+signRole).value)}</b> · 문서 지문 ${cur.slice(0,12)} · `+(ok?'<span style="color:#9f9">문서 내용 정상</span> (본문은 수정할 수 없습니다)':'<span style="color:#f99">문서가 손상되었거나 변경되었습니다. 서명하지 마세요.</span>');$('sbs').style.display=ok?'inline-block':'none'}
 catch(e){$('sbi').innerHTML='<span style="color:#f99">서명 요청 링크를 읽지 못했습니다. 링크가 끝까지 복사되었는지 확인하세요.</span>';$('sbs').style.display='none'}}
 function startSign(){openPad(signRole)}
-async function finishSign(d,nm){$('m').style.display='none';if(!d){alert('서명 그림이 비어 있습니다. 그림을 그려 주세요.');return}
+async function finishSign(d,nm){if($('kind').value=='의향서'){if(!$('as').value){alert('회신 의향을 선택해 주세요.');return}$('ans').value=$('as').value;$('cmt').value=$('ac').value.trim()}$('m').style.display='none';if(!d){alert('서명 그림이 비어 있습니다. 그림을 그려 주세요.');return}
 const t=nowShort();sigs[signRole]=d;$('n'+signRole).value=nm;sgh[signRole]=signHash;sgt[signRole]=t;render();
 const dd=data();dd.sigs=await Promise.all(sigs.map(shrink));signOut={armysign:1,v:2,h:signHash,r:signRole,t,d:dd};
 const link=baseUrl()+'#signed='+await pack(signOut);$('sbl').value=link;$('sbr').style.display='block';
@@ -346,7 +365,7 @@ async function applySigned(o){if(!o||!o.armysign){st('올바른 서명 결과가
 const r=o.r,nm=$('r'+r).value,cur=await docHash();
 if(o.d){
  if(cur===o.h){if(sigs[r]&&!confirm(`「${nm}」 칸에 이미 서명이 있습니다. 받은 서명으로 바꿀까요?`))return false;
-  sigs[r]=o.d.sigs[r];$('n'+r).value=o.d['n'+r]||$('n'+r).value;sgh[r]=o.h;sgt[r]=o.t||'';if(loaded)mod=today();render();st(`「${nm}」 칸 서명을 적용했습니다. 문서 내용이 서명 요청 때와 일치합니다.`);return true}
+  sigs[r]=o.d.sigs[r];$('n'+r).value=o.d['n'+r]||$('n'+r).value;if(o.d.ans){$('ans').value=o.d.ans;$('cmt').value=o.d.cmt||''}sgh[r]=o.h;sgt[r]=o.t||'';if(loaded)mod=today();render();st(`「${nm}」 칸 서명을 적용했습니다. 문서 내용이 서명 요청 때와 일치합니다.`);return true}
  if(!confirm('이 서명은 서명 요청을 보낼 때의 문서에 받은 것입니다.\n서명받은 문서로 바꿔 불러올까요?\n(지금 문서는 Ctrl+Z로 되돌릴 수 있습니다)'))return false;
  clearTimeout(hT);pushH();load(o.d,true);st(`서명받은 문서를 불러왔습니다. 「${nm}」 칸 서명이 들어 있고, 서명 요청 때의 내용과 일치합니다.`);return true}
 if(cur!==o.h&&!confirm('현재 문서의 내용이 서명 요청 때와 다릅니다.\n그래도 서명만 적용할까요? (검증에는 "불일치"로 표시됩니다)'))return false;
@@ -364,7 +383,7 @@ pad.onpointermove=e=>{if(dr){const[x,y]=pt(e);g.lineTo(x,y);g.stroke()}};window.
 function clr(){g.globalCompositeOperation='source-over';g.clearRect(0,0,400,160)}
 function clrT(){$('pt').value=''}
 function sg(){const d=g.getImageData(0,0,400,160).data.some(v=>v)?pad.toDataURL():'',nm=$('pt').value.trim();if(signMode){finishSign(d,nm);return}sigs[cur]=d;$('n'+cur).value=nm;sgh[cur]='';sgt[cur]='';if(loaded)mod=today();$('m').style.display='none';render()}
-function openPad(i){cur=i;clr();padH=[];$('pt').value=$('n'+cur).value;if(sigs[cur]){const im=new Image();im.onload=()=>{g.globalCompositeOperation='source-over';g.drawImage(im,0,0,400,160)};im.src=sigs[cur]}$('m').style.display='flex'}
+function openPad(i){cur=i;clr();padH=[];$('pt').value=$('n'+cur).value;if(sigs[cur]){const im=new Image();im.onload=()=>{g.globalCompositeOperation='source-over';g.drawImage(im,0,0,400,160)};im.src=sigs[cur]}$('answ').style.display=(signMode&&$('kind').value=='의향서')?'block':'none';if(signMode){$('as').value=$('ans').value;$('ac').value=$('cmt').value}$('m').style.display='flex'}
 $('doc').onclick=e=>{const t=e.target.closest('td[data-i]');if(t){if(signMode&&+t.dataset.i!=signRole)return;openPad(+t.dataset.i)}};
 document.querySelectorAll('#ui input,#ui select,#ui textarea').forEach(x=>x.oninput=()=>{if(loaded)mod=today();render()});
 const SH=location.hash;signMode=SH.startsWith('#sign=');

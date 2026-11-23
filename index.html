@@ -362,7 +362,7 @@ function shortUrl(u){return new Promise(res=>{const f='__is'+Date.now(),sc=docum
 window[f]=d=>end(d&&d.shorturl||null);sc.onerror=()=>end(null);sc.src='https://is.gd/create.php?format=json&callback='+f+'&url='+encodeURIComponent(u);document.head.appendChild(sc)})}
 async function finalLink(link,want,open){if(!want)return{u:link,n:''};if(open!='공개')return{u:link,n:'대외비·비공개 문서는 외부 단축 서비스를 쓰지 않고 긴 링크로 만들었습니다. '};const sh=await shortUrl(link);return sh?{u:sh,n:'짧은 링크로 줄였습니다. '}:{u:link,n:'링크 단축에 실패해 긴 링크로 만들었습니다. '}}
 const LIM=1900;let lastReq=null;
-let lkTok=0;
+let lkTok=0,reqCs=['','',''];
 async function mkLink(){const tok=++lkTok,r=+$('sr').value;if($('auto').value=='1'){$('date').value=iso();$('auto').value='0'}render();
 const full=data(),h=await docHash(full);try{const P=JSON.parse(localStorage.getItem('armyPending')||'{}');delete P[h];P[h]=full;Object.keys(P).slice(0,-5).forEach(k=>delete P[k]);localStorage.setItem('armyPending',JSON.stringify(P))}catch(e){}
 const cs=await Promise.all(sigs.map(x=>sigEnc(x)));
@@ -385,7 +385,7 @@ $('lk').value=f.u;$('lk').style.display='block';$('lkb').style.display='inline-b
 st(f.n+extra+cp0+`「${$('r'+r).value}」 칸 서명 요청 링크입니다. (${f.u.length.toLocaleString()}자) 작성일은 오늘로 고정됩니다.`)}
 function saveReq(){if(!lastReq)return;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(lastReq)],{type:'application/json'}));a.download='서명요청_'+($('title').value||'문서')+'.json';a.click()}
 async function enterSign(code){document.body.classList.add('sm');
-try{const o=typeof code=='string'?await unpack(code):code;if(o.d&&o.d.cs)o.d.sigs=await Promise.all(o.d.cs.map(sigDec));signSh=!!o.sh;signRole=o.r;signHash=o.h;load(o.d,false);await document.fonts.ready;render();const cur=await docHash(),ok=cur===o.h;
+try{const o=typeof code=='string'?await unpack(code):code;reqCs=(o.d&&o.d.cs)||['','',''];if(o.d&&o.d.cs)o.d.sigs=await Promise.all(o.d.cs.map(sigDec));signSh=!!o.sh;signRole=o.r;signHash=o.h;load(o.d,false);await document.fonts.ready;render();const cur=await docHash(),ok=cur===o.h;
 $('sbi').innerHTML=`서명할 칸: <b>${esc($('r'+signRole).value)}</b> · 문서 지문 ${cur.slice(0,12)} · `+(ok?'<span style="color:#9f9">문서 내용 정상</span> (본문은 수정할 수 없습니다)':'<span style="color:#f99">문서가 손상되었거나 변경되었습니다. 서명하지 마세요.</span>');$('sbs').style.display=ok?'inline-block':'none'}
 catch(e){$('sbi').innerHTML='<span style="color:#f99">서명 요청 링크를 읽지 못했습니다. 링크가 끝까지 복사되었는지 확인하세요.</span>';$('sbs').style.display='none'}}
 function startSign(){openPad(signRole)}
@@ -393,12 +393,16 @@ async function finishSign(d,nm){if($('kind').value=='의향서'){if(!$('as').val
 const t=nowShort();sigs[signRole]=d;$('n'+signRole).value=nm;sgh[signRole]=signHash;sgt[signRole]=t;render();
 signOut={armysign:1,v:3,h:signHash,r:signRole,t,n:nm};if($('kind').value=='의향서'){signOut.a=$('ans').value;signOut.c=$('cmt').value}
 $('sbl').value='링크를 만드는 중...';$('sbr').style.display='block';let long,f;
-for(const[W,H]of[[200,80],[150,60],[100,40]]){signOut.s=await sigEnc(d,W,H);long=baseUrl()+'#signed='+await pack(signOut);if(long.length<=LIM)break}f={u:long,n:''};$('sbl').value=long;
+const f0=data();delete f0.mod;f0.sigs=['','',''];
+for(const[W,H]of[[200,80],[150,60],[100,40]]){signOut.s=await sigEnc(d,W,H);f0.cs=reqCs.map((c,i)=>i==signRole?signOut.s:c);signOut.f=f0;long=baseUrl()+'#signed='+await pack(signOut);if(long.length<=4000)break}f={u:long,n:''};$('sbl').value=long;
 if(signSh&&$('open').value=='공개')shortUrl(long).then(sh=>{if(sh&&$('sbl').value===long){$('sbl').value=sh;try{navigator.clipboard.writeText(sh)}catch(e){}$('sbc').textContent='짧은 링크로 줄였습니다. 링크를 복사해 작성자에게 보내세요.'}});
 let msg=f.n+(f.u===long&&long.length>LIM?'링크가 길어 메신저에서 파일로 바뀔 수 있습니다. 「파일로 저장」으로 파일을 보내세요.':'아래 링크를 문서 작성자에게 보내세요.');try{await navigator.clipboard.writeText(f.u);msg=msg.replace('아래 링크를 문서 작성자에게 보내세요.','링크를 자동으로 복사했습니다. 작성자에게 붙여넣기(Ctrl+V)로 보내세요.')}catch(e){}$('sbc').textContent=msg}
 function saveSig(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(signOut)],{type:'application/json'}));a.download='서명완료_'+$('r'+signRole).value+'.json';a.click()}
 async function applySigned(o){if(!o||!o.armysign){st('올바른 서명 결과가 아닙니다.');return false}
 const r=o.r,nm=$('r'+r).value,cur=await docHash();
+if(o.f){const d=Object.assign({},o.f);d.sigs=await Promise.all((d.cs||[]).map(sigDec));delete d.cs;
+ if(cur===o.h){if(sigs[r]&&!confirm(`「${nm}」 칸에 이미 서명이 있습니다. 받은 서명으로 바꿀까요?`))return false;sigs[r]=d.sigs[r];if(o.n)$('n'+r).value=o.n;if(o.a){$('ans').value=o.a;$('cmt').value=o.c||''}sgh[r]=o.h;sgt[r]=o.t||'';if(loaded)mod=today();render();st(`「${nm}」 칸 서명을 적용했습니다. 문서 내용이 서명 요청 때와 일치합니다.`);return true}
+ clearTimeout(hT);pushH();load(d,true);st(`서명 링크에 담긴 문서로 복구했습니다. 「${nm}」 칸 서명이 포함되어 있습니다. (이전 화면은 Ctrl+Z로 되돌릴 수 있습니다)`);return true}
 if(!o.d&&o.v>=3){const sg=await sigDec(o.s),ap=()=>{sigs[r]=sg;if(o.n)$('n'+r).value=o.n;if(o.a){$('ans').value=o.a;$('cmt').value=o.c||''}sgh[r]=o.h;sgt[r]=o.t||'';if(loaded)mod=today();render()};
  if(cur===o.h){if(sigs[r]&&!confirm(`「${nm}」 칸에 이미 서명이 있습니다. 받은 서명으로 바꿀까요?`))return false;ap();st(`「${nm}」 칸 서명을 적용했습니다. 문서 내용이 서명 요청 때와 일치합니다.`);return true}
  let P={};try{P=JSON.parse(localStorage.getItem('armyPending')||'{}')}catch(e){}

@@ -344,7 +344,7 @@ async function unpack(c){const u=s2b(c.slice(1));const r=c[0]=='d'?new Uint8Arra
 async function docHash(o){o=o||data();const c={};['kind','title','org','name','iso','keep','open','to','due','cover','sum','body','r0','r1','r2'].forEach(k=>c[k]=o[k]);const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(c)));return[...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('')}
 const shrink=d=>d?new Promise(r=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=240;c.height=96;c.getContext('2d').drawImage(im,0,0,240,96);r(c.toDataURL())};im.src=d}):Promise.resolve('');
 const nowShort=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getMonth()+1}. ${d.getDate()}. ${p(d.getHours())}:${p(d.getMinutes())}`};
-const baseUrl=()=>location.href.split('#')[0];
+const baseUrl=()=>location.href.split('#')[0].split('?')[0]+'?v='+Date.now();
 function cp(id){const t=$(id);t.select();try{navigator.clipboard.writeText(t.value).then(()=>alert('복사했습니다.'))}catch(e){document.execCommand('copy');alert('복사했습니다.')}}
 function roleOpts(){[...$('sr').options].forEach((o,i)=>o.textContent=($('r'+i).value||'칸')+' 칸')}
 async function verify(){if(signMode)return;const cur=await docHash(),out=[];for(let i=0;i<3;i++)if(sgh[i])out.push(`${esc($('r'+i).value)} 서명(${sgt[i]}): `+(sgh[i]===cur?'<b style="color:#080">일치</b> (서명 시점과 문서 내용 동일)':'<b style="color:#c00">불일치</b> (서명 후 내용이 바뀜, 서명 무효)'));$('vf').innerHTML='전자 서명 검증<br>'+(out.length?out.join('<br>'):'받은 서명 없음')+`<br><span style="color:#777">문서 지문 ${cur.slice(0,12)}</span>`}
@@ -407,7 +407,7 @@ if(!o.d&&o.v>=3){const sg=await sigDec(o.s),ap=()=>{sigs[r]=sg;if(o.n)$('n'+r).v
  if(cur===o.h){if(sigs[r]&&!confirm(`「${nm}」 칸에 이미 서명이 있습니다. 받은 서명으로 바꿀까요?`))return false;ap();st(`「${nm}」 칸 서명을 적용했습니다. 문서 내용이 서명 요청 때와 일치합니다.`);return true}
  let P={};try{P=JSON.parse(localStorage.getItem('armyPending')||'{}')}catch(e){}
  if(P[o.h]){if(!confirm('이 서명은 서명 요청을 보낼 때의 문서에 받은 것입니다.\n그 문서로 바꿔 불러올까요?\n(지금 문서는 Ctrl+Z로 되돌릴 수 있습니다)'))return false;clearTimeout(hT);pushH();load(P[o.h],true);ap();st(`서명받은 문서를 불러왔습니다. 「${nm}」 칸 서명이 들어 있고, 서명 요청 때의 내용과 일치합니다.`);return true}
- if(!confirm('현재 문서가 서명 요청 때와 다르고, 요청 때의 문서도 이 브라우저에 없습니다.\n그래도 서명만 적용할까요? (검증에는 "불일치"로 표시됩니다)'))return false;ap();st(`「${nm}」 칸 서명을 적용했습니다.`);return true}
+ if(!confirm('이 서명 링크에는 문서 내용이 들어 있지 않습니다. (서명하는 사람의 화면이 옛 버전이었을 때 생깁니다)\n그래서 문서를 복구할 수 없습니다.\n서명만 적용할까요? (검증에는 "불일치"로 표시됩니다)\n\n※ 문서까지 복구하려면 새 서명 요청 링크를 만들어 다시 서명받으세요.'))return false;ap();st(`「${nm}」 칸 서명을 적용했습니다.`);return true}
 if(o.d){
  if(cur===o.h){if(sigs[r]&&!confirm(`「${nm}」 칸에 이미 서명이 있습니다. 받은 서명으로 바꿀까요?`))return false;
   sigs[r]=o.d.sigs[r];$('n'+r).value=o.d['n'+r]||$('n'+r).value;if(o.d.ans){$('ans').value=o.d.ans;$('cmt').value=o.d.cmt||''}sgh[r]=o.h;sgt[r]=o.t||'';if(loaded)mod=today();render();st(`「${nm}」 칸 서명을 적용했습니다. 문서 내용이 서명 요청 때와 일치합니다.`);return true}

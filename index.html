@@ -340,7 +340,17 @@ const t=k=='보고서'?TPL:Object.assign({},TPL,KT[k]);['title','keep','open','t
 const b2s=u=>{let t='';for(let i=0;i<u.length;i+=8192)t+=String.fromCharCode(...u.subarray(i,i+8192));return btoa(t).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
 const s2b=t=>{t=t.replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';return Uint8Array.from(atob(t),c=>c.charCodeAt(0))};
 async function pack(o){const u=new TextEncoder().encode(JSON.stringify(o));if(!window.CompressionStream)return'r'+b2s(u);return'd'+b2s(new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer()))}
-async function unpack(c){const u=s2b(c.slice(1));const r=c[0]=='d'?new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()):u;return JSON.parse(new TextDecoder().decode(r))}
+const HB=a=>{const x=new Uint8Array(a.length+3);x[0]=a.length>>16;x[1]=a.length>>8&255;x[2]=a.length&255;x.set(a,3);let s='',acc=0,n=0;for(const b of x){acc=(acc<<8)|b;n+=8;while(n>=13){n-=13;s+=String.fromCharCode(0xAC00+((acc>>n)&8191))}acc&=(1<<n)-1}if(n)s+=String.fromCharCode(0xAC00+((acc<<(13-n))&8191));return s};
+const BH=s=>{let acc=0,n=0;const o=[];for(const ch of s){acc=(acc<<13)|(ch.charCodeAt(0)-0xAC00);n+=13;while(n>=8){n-=8;o.push((acc>>n)&255)}acc&=(1<<n)-1}const L=(o[0]<<16)|(o[1]<<8)|o[2];return Uint8Array.from(o.slice(3,3+L))};
+async function packK(o){if(!window.CompressionStream)return pack(o);const u=new TextEncoder().encode(JSON.stringify(o));return'k'+HB(new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer()))}
+const tf=async(u,o={})=>{const ac=new AbortController(),t=setTimeout(()=>ac.abort(),8000);try{return await fetch(u,Object.assign({signal:ac.signal},o))}finally{clearTimeout(t)}};
+const CP=[
+{id:'p',put:async t=>{const r=await tf('https://api.pastes.dev/post',{method:'POST',headers:{'Content-Type':'text/plain'},body:t});if(!r.ok)throw 0;const j=await r.json();if(!j.key)throw 0;return j.key},get:async k=>{const r=await tf('https://api.pastes.dev/'+encodeURIComponent(k));if(!r.ok)throw 0;return await r.text()}},
+{id:'j',put:async t=>{const r=await tf('https://jsonblob.com/api/jsonBlob',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({t})});if(!r.ok)throw 0;const m=(r.headers.get('Location')||'').match(/([0-9a-f-]{36})\s*$/i);if(!m)throw 0;return m[1]},get:async k=>{const r=await tf('https://jsonblob.com/api/jsonBlob/'+encodeURIComponent(k),{headers:{Accept:'application/json'}});if(!r.ok)throw 0;return(await r.json()).t}}];
+async function cloudPut(o){try{if(!(window.crypto&&crypto.subtle))return null;const u=await zr(new TextEncoder().encode(JSON.stringify(o))),k=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12)),ck=await crypto.subtle.importKey('raw',k,'AES-GCM',false,['encrypt']),ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv},ck,u)),b=new Uint8Array(12+ct.length);b.set(iv);b.set(ct,12);const t=b2s(b);
+for(const p of CP){try{const id=await p.put(t);return'x'+p.id+id+'~'+b2s(k)}catch(e){}}}catch(e){}return null}
+async function cloudGet(c){const p=CP.find(x=>x.id==c[1]);if(!p)throw 0;const[id,ks]=c.slice(2).split('~'),b=s2b(await p.get(id)),ck=await crypto.subtle.importKey('raw',s2b(ks),'AES-GCM',false,['decrypt']),u=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(0,12)},ck,b.slice(12)));return JSON.parse(new TextDecoder().decode(await ur(u)))}
+async function unpack(c){if(c.includes('%'))try{c=decodeURIComponent(c)}catch(e){}c=c.trim();if(c[0]=='x')return await cloudGet(c);if(c[0]=='k'){return JSON.parse(new TextDecoder().decode(await ur(BH(c.slice(1)))))}const u=s2b(c.slice(1));const r=c[0]=='d'?new Uint8Array(await new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()):u;return JSON.parse(new TextDecoder().decode(r))}
 async function docHash(o){o=o||data();const c={};['kind','title','org','name','iso','keep','open','to','due','cover','sum','body','r0','r1','r2'].forEach(k=>c[k]=o[k]);const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(c)));return[...new Uint8Array(h)].map(x=>x.toString(16).padStart(2,'0')).join('')}
 const shrink=d=>d?new Promise(r=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=240;c.height=96;c.getContext('2d').drawImage(im,0,0,240,96);r(c.toDataURL())};im.src=d}):Promise.resolve('');
 const nowShort=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getMonth()+1}. ${d.getDate()}. ${p(d.getHours())}:${p(d.getMinutes())}`};
@@ -362,13 +372,15 @@ function shortUrl(u){return new Promise(res=>{const f='__is'+Date.now(),sc=docum
 window[f]=d=>end(d&&d.shorturl||null);sc.onerror=()=>end(null);sc.src='https://is.gd/create.php?format=json&callback='+f+'&url='+encodeURIComponent(u);document.head.appendChild(sc)})}
 async function finalLink(link,want,open){if(!want)return{u:link,n:''};if(open!='공개')return{u:link,n:'대외비·비공개 문서는 외부 단축 서비스를 쓰지 않고 긴 링크로 만들었습니다. '};const sh=await shortUrl(link);return sh?{u:sh,n:'짧은 링크로 줄였습니다. '}:{u:link,n:'링크 단축에 실패해 긴 링크로 만들었습니다. '}}
 const LIM=1900;let lastReq=null;
-let lkTok=0,reqCs=['','',''];
+let lkTok=0,reqCs=['','',''],HG=0;
 async function mkLink(){const tok=++lkTok,r=+$('sr').value;if($('auto').value=='1'){$('date').value=iso();$('auto').value='0'}render();
 const full=data(),h=await docHash(full);try{const P=JSON.parse(localStorage.getItem('armyPending')||'{}');delete P[h];P[h]=full;Object.keys(P).slice(0,-5).forEach(k=>delete P[k]);localStorage.setItem('armyPending',JSON.stringify(P))}catch(e){}
 const cs=await Promise.all(sigs.map(x=>sigEnc(x)));
-const build=async(ws)=>{const d=Object.assign({},full);d.cs=ws?cs:['','',''];d.sigs=['','',''];delete d.mod;lastReq={v:3,r,h,sh:$('shl').checked?1:0,d};return baseUrl()+'#sign='+await pack(lastReq)};
+const build=async(ws)=>{const d=Object.assign({},full);d.cs=ws?cs:['','',''];d.sigs=['','',''];delete d.mod;lastReq={v:3,r,h,sh:$('shl').checked?1:0,d};return baseUrl()+'#sign='+await(HG?packK(lastReq):pack(lastReq))};
 let long=await build(true),extra='';
 if(long.length>LIM&&cs.some(x=>x)){const l2=await build(false);if(l2.length<long.length){long=l2;extra='링크가 길어 이전 서명 그림은 빼고 만들었습니다. '}else long=await build(true)}
+if(long.length>LIM){st('문서가 길어 암호화해서 서버에 저장하는 중... (몇 초 걸릴 수 있습니다)');await build(true);const code=await cloudPut(lastReq);if(code){long=baseUrl()+'#sign='+code;extra='문서가 길어 암호화해서 임시 서버에 저장하고 짧은 링크로 만들었습니다. '}}
+if(long.length>LIM){HG=1;const l3=await build(!extra);if(l3.length<long.length){long=l3;extra+='링크 길이를 줄이려고 한글 압축 방식으로 만들었습니다. '}else{HG=0;await build(!extra)}}HG=0;
 const want=$('shl').checked&&$('open').value=='공개',canShort=want;
 if(long.length>LIM&&!want)extra+='링크가 길어 메신저에서 파일로 바뀔 수 있습니다. 「요청 파일 저장」으로 파일을 보내세요. ';
 const show=async(u,msg)=>{$('lk').value=u;$('lk').style.display='block';$('lkb').style.display='inline-block';$('rqf').style.display='inline-block';let c='';try{await navigator.clipboard.writeText(u);c='링크를 자동으로 복사했습니다. 카톡·메일에 붙여넣기(Ctrl+V) 하세요. '}catch(e){}st(msg+extra+c+`「${$('r'+r).value}」 칸 서명 요청 링크입니다. (${u.length.toLocaleString()}자) 작성일은 오늘로 고정됩니다.`)};
@@ -377,7 +389,7 @@ if(canShort){const sh=await shortUrl(long);if(tok!==lkTok)return;if(sh){await sh
 async function mkLinkOld(){if(!await stamp())return;const r=+$('sr').value;if($('auto').value=='1'){$('date').value=iso();$('auto').value='0'}render();
 const full=data(),h=await docHash(full);try{const P=JSON.parse(localStorage.getItem('armyPending')||'{}');delete P[h];P[h]=full;Object.keys(P).slice(0,-5).forEach(k=>delete P[k]);localStorage.setItem('armyPending',JSON.stringify(P))}catch(e){}
 const cs=await Promise.all(sigs.map(x=>sigEnc(x)));
-const build=async(ws)=>{const d=Object.assign({},full);d.cs=ws?cs:['','',''];d.sigs=['','',''];delete d.mod;lastReq={v:3,r,h,sh:$('shl').checked?1:0,d};return baseUrl()+'#sign='+await pack(lastReq)};
+const build=async(ws)=>{const d=Object.assign({},full);d.cs=ws?cs:['','',''];d.sigs=['','',''];delete d.mod;lastReq={v:3,r,h,sh:$('shl').checked?1:0,d};return baseUrl()+'#sign='+await(HG?packK(lastReq):pack(lastReq))};
 let long=await build(true),f=await finalLink(long,$('shl').checked,$('open').value),extra='';
 if(f.u===long&&long.length>LIM&&cs.some(x=>x)){const l2=await build(false);if(l2.length<long.length){long=l2;f.u=l2;extra='링크가 길어 이전 서명 그림은 빼고 만들었습니다. '}}
 if(f.u===long&&long.length>LIM)extra+='링크가 길어 메신저에서 파일로 바뀔 수 있습니다. 「요청 파일 저장」으로 파일을 보내세요. ';
@@ -393,8 +405,13 @@ async function finishSign(d,nm){if($('kind').value=='의향서'){if(!$('as').val
 const t=nowShort();sigs[signRole]=d;$('n'+signRole).value=nm;sgh[signRole]=signHash;sgt[signRole]=t;render();
 signOut={armysign:1,v:3,h:signHash,r:signRole,t,n:nm};if($('kind').value=='의향서'){signOut.a=$('ans').value;signOut.c=$('cmt').value}
 $('sbl').value='링크를 만드는 중...';$('sbr').style.display='block';let long,f;
-const f0=data();delete f0.mod;f0.sigs=['','',''];
-for(const[W,H]of[[200,80],[150,60],[100,40]]){signOut.s=await sigEnc(d,W,H);f0.cs=reqCs.map((c,i)=>i==signRole?signOut.s:c);signOut.f=f0;long=baseUrl()+'#signed='+await pack(signOut);if(long.length<=4000)break}f={u:long,n:''};$('sbl').value=long;
+const f0=data();delete f0.mod;f0.sigs=['','',''];f0.sgh=['','',''];let found=false;
+let cn='';
+const tryInline=async hg=>{for(const[W,H]of[[200,80],[150,60],[100,40]]){signOut.s=await sigEnc(d,W,H);f0.cs=reqCs.map((c,i)=>i==signRole?signOut.s:c);signOut.f=f0;long=baseUrl()+'#signed='+await(hg?packK(signOut):pack(signOut));if(long.length<=LIM)return true}return false};
+found=await tryInline(0);
+if(!found){$('sbl').value='문서가 길어 암호화해서 서버에 저장하는 중...';signOut.s=await sigEnc(d,200,80);f0.cs=reqCs.map((c,i)=>i==signRole?signOut.s:c);signOut.f=f0;const code=await cloudPut(signOut);if(code){long=baseUrl()+'#signed='+code;found=true;cn='문서가 길어 암호화해서 임시 서버에 저장하고 짧은 링크로 만들었습니다. '}}
+if(!found)found=await tryInline(1);
+f={u:long,n:cn};$('sbl').value=long;
 if(signSh&&$('open').value=='공개')shortUrl(long).then(sh=>{if(sh&&$('sbl').value===long){$('sbl').value=sh;try{navigator.clipboard.writeText(sh)}catch(e){}$('sbc').textContent='짧은 링크로 줄였습니다. 링크를 복사해 작성자에게 보내세요.'}});
 let msg=f.n+(f.u===long&&long.length>LIM?'링크가 길어 메신저에서 파일로 바뀔 수 있습니다. 「파일로 저장」으로 파일을 보내세요.':'아래 링크를 문서 작성자에게 보내세요.');try{await navigator.clipboard.writeText(f.u);msg=msg.replace('아래 링크를 문서 작성자에게 보내세요.','링크를 자동으로 복사했습니다. 작성자에게 붙여넣기(Ctrl+V)로 보내세요.')}catch(e){}$('sbc').textContent=msg}
 function saveSig(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(signOut)],{type:'application/json'}));a.download='서명완료_'+$('r'+signRole).value+'.json';a.click()}
@@ -402,7 +419,7 @@ async function applySigned(o){if(!o||!o.armysign){st('올바른 서명 결과가
 const r=o.r,nm=$('r'+r).value,cur=await docHash();
 if(o.f){const d=Object.assign({},o.f);d.sigs=await Promise.all((d.cs||[]).map(sigDec));delete d.cs;
  if(cur===o.h){if(sigs[r]&&!confirm(`「${nm}」 칸에 이미 서명이 있습니다. 받은 서명으로 바꿀까요?`))return false;sigs[r]=d.sigs[r];if(o.n)$('n'+r).value=o.n;if(o.a){$('ans').value=o.a;$('cmt').value=o.c||''}sgh[r]=o.h;sgt[r]=o.t||'';if(loaded)mod=today();render();st(`「${nm}」 칸 서명을 적용했습니다. 문서 내용이 서명 요청 때와 일치합니다.`);return true}
- clearTimeout(hT);pushH();load(d,true);st(`서명 링크에 담긴 문서로 복구했습니다. 「${nm}」 칸 서명이 포함되어 있습니다. (이전 화면은 Ctrl+Z로 되돌릴 수 있습니다)`);return true}
+ clearTimeout(hT);pushH();load(d,true);sgh[r]=o.h;sgt[r]=o.t||sgt[r]||'';render();st(`서명 링크에 담긴 문서로 복구했습니다. 「${nm}」 칸 서명이 포함되어 있습니다. (이전 화면은 Ctrl+Z로 되돌릴 수 있습니다)`);return true}
 if(!o.d&&o.v>=3){const sg=await sigDec(o.s),ap=()=>{sigs[r]=sg;if(o.n)$('n'+r).value=o.n;if(o.a){$('ans').value=o.a;$('cmt').value=o.c||''}sgh[r]=o.h;sgt[r]=o.t||'';if(loaded)mod=today();render()};
  if(cur===o.h){if(sigs[r]&&!confirm(`「${nm}」 칸에 이미 서명이 있습니다. 받은 서명으로 바꿀까요?`))return false;ap();st(`「${nm}」 칸 서명을 적용했습니다. 문서 내용이 서명 요청 때와 일치합니다.`);return true}
  let P={};try{P=JSON.parse(localStorage.getItem('armyPending')||'{}')}catch(e){}
